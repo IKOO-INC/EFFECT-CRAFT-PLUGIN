@@ -59,7 +59,9 @@ Pembuat layout kartu otomatis dengan **20 template berbeda**: Notification / Loc
 
 Template Liquid Glass ditujukan untuk kontrol/navigation yang mengambang di atas konten, dengan shape transparan yang menunjukkan background comp melalui permukaannya. Ini adalah **aproksimasi visual editable** menggunakan opacity dan highlight shape—bukan blur/refraction native atau implementasi Liquid Glass Apple. Untuk menjaga keterbacaan, gunakan di atas footage/background yang sesuai dan tidak menumpuk terlalu banyak material sekaligus.
 
-Setiap kartu dibuat sebagai precomposition berisi shape vector dan text layer asli yang tetap editable. Di composition utama, kartu-kartu tersusun otomatis dan terpilih setelah dibuat. Double-click precomp untuk mengganti teks, warna, shape, atau elemen lain. Pilih precomp kartu tersebut lalu gunakan Apple Card Motion Studio untuk menerapkan animasi entrance. Semua pembuatan bisa di-undo sebagai satu langkah.
+Setiap kartu dibuat sebagai precomposition berisi shape vector dan text layer asli yang tetap editable. Tipografi menggunakan hierarki title/body/caption, heading lebih tegas, leading sekitar 1,2×, ukuran minimum yang terjaga, dan wrapping di dalam safe margin kartu. Di composition utama, kartu-kartu tersusun otomatis dan terpilih setelah dibuat. Double-click precomp untuk mengganti teks, warna, shape, atau elemen lain. Pilih precomp kartu tersebut lalu gunakan Apple Card Motion Studio untuk menerapkan animasi entrance. Semua pembuatan bisa di-undo sebagai satu langkah.
+
+Acuan tipografi: [Typography in App Design — Ramotion](https://www.ramotion.com/blog/typography-in-app-design/) untuk hierarki, kontras, line length, whitespace, responsivitas, dan konsistensi gaya teks.
 
 Acuan desain: [Apple HIG — Materials & Liquid Glass](https://developer.apple.com/design/human-interface-guidelines/materials) · [Tab Bars](https://developer.apple.com/design/human-interface-guidelines/tab-bars) · [Sidebars](https://developer.apple.com/design/human-interface-guidelines/sidebars).
 

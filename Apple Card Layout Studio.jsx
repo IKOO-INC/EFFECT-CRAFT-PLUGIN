@@ -109,7 +109,7 @@
         }
         return layer;
     }
-    function addText(comp, name, text, x, y, size, color, centered) {
+    function addText(comp, name, text, x, y, size, color, centered, bold, tracking) {
         var layer = comp.layers.addText(text);
         layer.name = name;
         var source = layer.property("ADBE Text Properties").property("ADBE Text Document");
@@ -118,6 +118,9 @@
         doc.fillColor = colorCopy(color);
         doc.applyFill = true;
         doc.applyStroke = false;
+        try { doc.fauxBold = !!bold; } catch (eBold) {}
+        try { doc.autoLeading = false; doc.leading = Math.round(size * 1.2); } catch (eLeading) {}
+        if (typeof tracking === "number") { try { doc.tracking = tracking; } catch (eTracking) {} }
         try { doc.justification = centered ? ParagraphJustification.CENTER_JUSTIFY : ParagraphJustification.LEFT_JUSTIFY; } catch (eJustify) {}
         source.setValue(doc);
         layer.property("ADBE Transform Group").property("ADBE Position").setValue([x, y]);
@@ -143,9 +146,9 @@
         var transparentOverlay = liquidGlass || type.indexOf("Live Activity /") === 0;
         cardComp.bgColor = colorCopy(col.bg);
         var pad = Math.round(width * 0.075);
-        var titleSize = Math.max(23, Math.round(width * 0.073));
-        var bodySize = Math.max(15, Math.round(width * 0.041));
-        var smallSize = Math.max(11, Math.round(width * 0.029));
+        var titleSize = Math.max(24, Math.round(width * 0.073));
+        var bodySize = Math.max(16, Math.round(width * 0.041));
+        var smallSize = Math.max(12, Math.round(width * 0.029));
         var cx = width / 2, cy = height / 2;
         var maxBody = Math.max(17, Math.floor((width - 2 * pad) / (bodySize * 0.56)));
         var body = wrapText(detail, maxBody);
@@ -159,7 +162,9 @@
         }
 
         function txt(name, value, x, y, size, color, center) {
-            return addText(cardComp, name + " — editable", value, x, y, size, color, !!center);
+            var headline = /(title|heading|clock|temperature|stock value|calendar date|app name|conversation name)/i.test(name);
+            var smallLabel = size <= smallSize + 1;
+            return addText(cardComp, name + " — editable", value, x, y, size, color, !!center, headline, smallLabel ? 8 : 0);
         }
         function rect(name, x, y, w, h, radius, color, opacity) {
             return shapeRect(cardComp, name, x, y, w, h, radius, color, opacity);
