@@ -10,8 +10,8 @@ Panel ScriptUI `.jsx` berisi **60 animasi entrance teks** dengan gaya motion gra
 
 1. Buka EffectCraft.
 2. Pilih **Effect ▸ Install Effect Plug-in Bundle (Folder)…** (atau menu instalasi bundle yang tersedia di versi Anda), lalu pilih folder repo ini. EffectCraft memasang berkas `.jsx` sebagai ScriptUI panel.
-3. Buka panel dari **Window ▸ Text Animation Studio.jsx**, **Window ▸ Curve Studio.jsx**, atau **Window ▸ Motion FX Studio.jsx**. Jika tidak langsung terlihat, periksa submenu panel.
-4. Di Text Animation Studio, pilih preset dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe, pilih preset atau atur influence/speed, lalu klik **APPLY CURVE**. Di Motion FX Studio, pilih layer dan klik kartu FX untuk menambahkan effect stack.
+3. Buka panel dari **Window ▸ Text Animation Studio.jsx**, **Window ▸ Curve Studio.jsx**, **Window ▸ Motion FX Studio.jsx**, atau **Window ▸ Apple Card Motion Studio.jsx**. Jika tidak langsung terlihat, periksa submenu panel.
+4. Di Text Animation Studio, pilih preset dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe, pilih preset atau atur influence/speed, lalu klik **APPLY CURVE**. Di Motion FX Studio, pilih layer dan klik kartu FX untuk menambahkan effect stack. Di Apple Card Motion Studio, pilih layer kartu/teks/artwork dan klik preset gerak.
 
 **Alternatif:** pasang masing-masing berkas `.jsx` melalui **File ▸ Scripts ▸ Install ScriptUI Panel…**. Jika hanya menjalankan berkas melalui **Run Script File…**, panel akan terbuka sebagai palette mengambang.
 
@@ -38,3 +38,16 @@ Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · 
 Katalog kartu glow dua kolom berisi effect stack yang terinspirasi workflow Alight Motion: Neon Bloom, Soft Bloom, Dream Blur, Directional Smear, Chromatic Shift, Echo Trails, Wave Warp, Cinematic Vignette, Film Grain, dan Neon RGB. Panel memakai effect native EffectCraft, menerapkan stack ke layer terpilih, lalu parameternya bisa disesuaikan lagi di **Effect Controls**.
 
 Berkas utama: [`Motion FX Studio.jsx`](./Motion%20FX%20Studio.jsx)
+
+## 4. Apple Card Motion Studio
+
+Panel `.jsx` dengan 12 preset gerak kartu Apple-inspired dalam empat kategori: Slide & Reveal, Scale & Settle, Stack & Cascade, dan Float & Tilt. Termasuk Clean Rise, Glide, Soft Pop, Card Cascade, Layered Stack, dan Fan In. Atur durasi, jeda stagger, serta urutan layer; preset membuat keyframe Position, Scale, Opacity, dan Rotation pada layer terpilih sehingga elemen bisa masuk bergantian.
+
+Panel ini tidak mengganti atau meraster isi layer. Text layer tetap bisa diedit melalui source text, dan shape/artwork tetap bisa disunting seperti biasa. Untuk satu kartu yang tersusun dari beberapa layer dan harus bergerak serempak, pilih layer-layernya lalu set **Jarak stagger = 0** sebelum menerapkan preset; jika ingin beberapa kartu masuk bergantian, gunakan stagger di atas 0. Preset menganimasikan transform 2D, bukan rotasi 3D atau pembuatan kartu otomatis.
+
+### Referensi inspirasi
+
+- [Apple Design skill](https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md): motion responsif dan natural, dengan spring serta overshoot secara hemat.
+- [Apple Motion skill](https://github.com/IskakovDamir/apple-motion/blob/main/skill/apple-motion/SKILL.md): entry singkat (sekitar 8 frame median), gerak slide/fade yang bersih, dan transisi aksen yang jarang. Preset ini menerjemahkan prinsip tersebut ke keyframe transform EffectCraft.
+
+Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · [`Curve Studio.jsx`](./Curve%20Studio.jsx) · [`Motion FX Studio.jsx`](./Motion%20FX%20Studio.jsx) · [`Apple Card Motion Studio.jsx`](./Apple%20Card%20Motion%20Studio.jsx)
