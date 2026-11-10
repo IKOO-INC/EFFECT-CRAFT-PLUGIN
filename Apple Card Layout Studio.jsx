@@ -18,7 +18,7 @@
     header.alignChildren = ["fill", "top"];
     header.spacing = 3;
     header.margins = 9;
-    header.add("statictext", undefined, "20 template UI editable · termasuk Liquid Glass-inspired");
+    header.add("statictext", undefined, "28 template UI editable · termasuk Liquid Glass-inspired");
     header.add("statictext", undefined, "Edit judul dan isi langsung di dalam precomp kartu");
 
     var design = ui.add("panel", undefined, "PILIH DESAIN");
@@ -36,7 +36,7 @@
         list.alignment = ["fill", "center"];
         return list;
     }
-    var cardType = dropdownRow(design, "Template", ["Notification / Lock Screen", "Settings / Dark UI", "Widget / Dashboard", "Media Player", "App Store Feature", "Message Thread", "Liquid Glass / Control Center", "Liquid Glass / Tab Bar", "Liquid Glass / Toolbar", "Liquid Glass / Segmented", "Live Activity / Dynamic Island", "Spotlight / Search", "Sidebar / Navigation", "App Icon Grid", "Weather / Widget", "Finance / Stocks", "Smart Stack / Widgets", "Notification Stack", "Focus / Control Tile", "Calendar / Event"], 6);
+    var cardType = dropdownRow(design, "Template", ["Notification / Lock Screen", "Settings / Dark UI", "Widget / Dashboard", "Media Player", "App Store Feature", "Message Thread", "Liquid Glass / Control Center", "Liquid Glass / Tab Bar", "Liquid Glass / Toolbar", "Liquid Glass / Segmented", "Live Activity / Dynamic Island", "Spotlight / Search", "Sidebar / Navigation", "App Icon Grid", "Weather / Widget", "Finance / Stocks", "Smart Stack / Widgets", "Notification Stack", "Focus / Control Tile", "Calendar / Event", "Wallet / Payment Pass", "Apple Pay / Transaction", "Product / Compact Card", "Product / Expandable Card", "App Store / Product Page", "Editorial / Story Card", "Accessory / Mini Player", "Home / Control Tile"], 6);
     var layoutType = dropdownRow(design, "Susunan", ["Kartu kipas bertumpuk", "Grid rapi"], 1);
     var themeType = dropdownRow(design, "Tema", ["Light", "Dark", "Vibrant"], 0);
     var countType = dropdownRow(design, "Jumlah kartu", ["1", "2", "3", "4", "5", "6"], 4);
@@ -84,7 +84,15 @@
             "Smart Stack / Widgets": [["Daily Overview", "Up Next", "Activity", "Travel Day", "Workday", "At Home"], ["Your day, at a glance.", "A meeting starts in 15 minutes.", "You are close to your move goal.", "Boarding time is coming up.", "Two things left on your list.", "The lights are ready when you are."], ["SMART STACK", "CALENDAR", "FITNESS", "TRAVEL", "REMINDERS", "HOME"]],
             "Notification Stack": [["Recent Activity", "Messages", "Orders", "Reminders", "Shared Albums", "Your Daily Brief"], ["The latest updates, all together.", "Emma sent you a new message.", "Your delivery is arriving soon.", "One item is due this afternoon.", "Three new photos were added.", "Your day is looking clear."], ["TODAY", "NOW", "2 MIN AGO", "10:30 AM", "YESTERDAY", "9:00 AM"]],
             "Focus / Control Tile": [["Personal Focus", "Work Focus", "Sleep Focus", "Do Not Disturb", "Reading Focus", "Fitness Focus"], ["Only the notifications you choose.", "Stay present with your work.", "Wind down and rest well.", "Quiet for a little while.", "A calmer space to read.", "Make room to move."], ["FOCUS ON", "WORK", "SLEEP", "PAUSED", "READING", "ACTIVE"]],
-            "Calendar / Event": [["Planning Session", "Team Sync", "Lunch with Maya", "Project Review", "Product Launch", "Focus Block"], ["Studio · 10:00–10:45 AM", "Design room · 11:30 AM", "Cafe Linden · 12:30 PM", "Conference A · 2:00 PM", "Main stage · 4:00 PM", "Time to make progress."], ["MON · DEC 10", "TODAY", "12:30 PM", "2:00 PM", "4:00 PM", "ALL DAY"]]
+            "Calendar / Event": [["Planning Session", "Team Sync", "Lunch with Maya", "Project Review", "Product Launch", "Focus Block"], ["Studio · 10:00–10:45 AM", "Design room · 11:30 AM", "Cafe Linden · 12:30 PM", "Conference A · 2:00 PM", "Main stage · 4:00 PM", "Time to make progress."], ["MON · DEC 10", "TODAY", "12:30 PM", "2:00 PM", "4:00 PM", "ALL DAY"]],
+            "Wallet / Payment Pass": [["Apple Card", "Travel Pass", "Coffee Club", "Everyday Rewards", "City Transit", "Member Card"], ["Titanium rewards · Daily Cash.", "Flight departs at 10:26 AM.", "Your next drink is on us.", "You earned 240 points.", "Tap to ride across the city.", "Member since 2024."], ["WALLET", "BOARDING A10", "REWARDS", "POINTS", "TRANSIT", "MEMBER"]],
+            "Apple Pay / Transaction": [["Northstar Coffee", "Studio Supply", "City Market", "Metro Transit", "Green Grocer", "Bookshop"], ["Card ending in 4821 · Approved.", "Card ending in 4821 · Approved.", "Card ending in 4821 · Approved.", "Express Transit · Complete.", "Card ending in 4821 · Approved.", "Card ending in 4821 · Approved."], ["PAYMENT COMPLETE", "$5.40", "$28.90", "$2.75", "$16.20", "$12.00"]],
+            "Product / Compact Card": [["AirPods Pro", "Studio Display", "MacBook Air", "Apple Watch", "HomePod mini", "iPad Air"], ["Immersive sound, all around you.", "A beautiful view of your work.", "Light, fast, ready for anything.", "A healthier day, at a glance.", "Room-filling sound in a compact design.", "Powerful ideas, made portable."], ["NEW", "DISPLAY", "MAC", "HEALTH", "HOME", "IPAD"]],
+            "Product / Expandable Card": [["Studio Workspace", "Travel Collection", "Sound Experience", "Daily Journal", "Home Essentials", "Photo Library"], ["Everything your team needs, together.", "A smoother way to plan your next trip.", "Thoughtful sound for every moment.", "A little space to think clearly.", "Simple controls for a more comfortable home.", "Your favorite moments, beautifully organized."], ["FEATURED", "TRAVEL", "LISTEN NOW", "JOURNAL", "CONNECTED HOME", "MEMORIES"]],
+            "App Store / Product Page": [["Photo Studio", "Mindful Minutes", "Field Notes", "Trail Finder", "Daily Steps", "Sleep Sounds"], ["Create something worth keeping.", "Make a little room to reset.", "A home for ideas in progress.", "Find a new path outside.", "Small movement, every day.", "Settle into a better night."], ["4.9 ★ · PHOTO & VIDEO", "4.8 ★ · HEALTH", "4.9 ★ · PRODUCTIVITY", "4.7 ★ · TRAVEL", "4.8 ★ · FITNESS", "4.9 ★ · WELLNESS"]],
+            "Editorial / Story Card": [["A quieter morning", "Made for the open road", "Color, in every detail", "The shape of sound", "A place to pause", "Light finds a way"], ["Small rituals. A better start.", "Go a little further today.", "See the world from a new angle.", "Listen closer to what matters.", "Make space for what is next.", "Designed to feel effortless."], ["THE JOURNAL", "TRAVEL NOTES", "DESIGN STORY", "LISTEN", "SLOW LIVING", "PERSPECTIVE"]],
+            "Accessory / Mini Player": [["Morning Light", "Ambient Waves", "City at Night", "New Music Mix", "Deep Focus", "Daily Replay"], ["Mira Sol · Soft pop", "Ocean Sounds · 45 min", "Various Artists · Radio", "Made for your morning.", "Instrumental · No vocals", "Your most played this week."], ["PLAYING", "SLEEP", "RADIO", "MIX 01", "FOCUS", "REPLAY"]],
+            "Home / Control Tile": [["Living Room", "Bedroom", "Kitchen", "Desk Lamp", "Climate", "Front Door"], ["Lights are on · Warm white.", "Ready for your wind-down.", "The room is bright and clear.", "Set to a comfortable level.", "Temperature is 21 degrees.", "Locked · Last checked now."], ["LIGHTS", "SCENE", "LIGHTS", "ACCESSORY", "CLIMATE", "SECURE"]]
         };
         var data = bank[type] || bank["Notification / Lock Screen"];
         return { title: data[0][index % data[0].length], detail: data[1][index % data[1].length], label: data[2][index % data[2].length] };
@@ -156,7 +164,7 @@
 
         // Opaque content cards use a quiet keyline. Glass/control overlays stay transparent
         // so the footage or composition background remains visible beneath their surfaces.
-        if (!transparentOverlay) {
+        if (!transparentOverlay && type !== "Product / Expandable Card") {
             shapeRect(cardComp, "Card Keyline", cx, cy, width - 2, height - 2, Math.round(width * 0.065), col.line);
             shapeRect(cardComp, "Card Surface", cx, cy, width - 4, height - 4, Math.round(width * 0.062), col.bg);
         }
@@ -422,10 +430,98 @@
             txt("Incoming message", body, pad + width * 0.25, height * 0.55, bodySize, col.fg, false);
             rect("Outgoing message bubble", width - pad - width * 0.72, height * 0.82, width * 0.72, height * 0.18, Math.round(width * 0.045), col.accent);
             txt("Outgoing message", "Sounds good!", width - pad - width * 0.65, height * 0.81, bodySize, [1, 1, 1], false);
+        } else if (type === "Wallet / Payment Pass") {
+            statusBar();
+            var walletInk = theme === "Dark" ? [0.16, 0.19, 0.25] : [0.055, 0.075, 0.13];
+            rect("Wallet pass card", cx, height * 0.43, width * 0.86, height * 0.48, Math.round(width * 0.05), walletInk);
+            rect("Wallet color accent", cx, height * 0.24, width * 0.86, height * 0.10, Math.round(width * 0.05), col.accent);
+            txt("Wallet issuer", label.toUpperCase(), pad, height * 0.27, smallSize, [1, 1, 1], false);
+            txt("Wallet pass title", titleText, pad, height * 0.43, titleSize * 0.8, [1, 1, 1], false);
+            txt("Wallet pass detail", body, pad, height * 0.52, smallSize, [0.83, 0.86, 0.91], false);
+            rect("Wallet chip", pad + width * 0.04, height * 0.67, width * 0.10, height * 0.07, width * 0.018, [0.82, 0.76, 0.56]);
+            txt("Wallet card number", "••••  ••••  ••••  4821", pad, height * 0.80, smallSize, [0.91, 0.92, 0.95], false);
+            txt("Wallet balance label", "AVAILABLE BALANCE", pad, height * 0.91, smallSize, col.muted, false);
+        } else if (type === "Apple Pay / Transaction") {
+            circle("Payment success icon", cx, height * 0.20, width * 0.16, [0.18, 0.72, 0.42]);
+            txt("Payment checkmark", "✓", cx - width * 0.035, height * 0.225, titleSize * 0.68, [1, 1, 1], false);
+            txt("Payment status", label.toUpperCase(), pad, height * 0.34, smallSize, col.muted, true);
+            txt("Merchant name", titleText, pad, height * 0.47, titleSize * 0.88, col.fg, true);
+            txt("Payment amount", "$24.00", pad, height * 0.63, Math.round(width * 0.15), col.fg, true);
+            txt("Payment detail", body, pad, height * 0.72, bodySize, col.muted, true);
+            divider(height * 0.80);
+            circle("Payment card icon", pad + width * 0.06, height * 0.88, width * 0.075, col.accent);
+            txt("Payment card label", "Apple Card  ·  •••• 4821", pad + width * 0.13, height * 0.90, smallSize, col.fg, false);
+        } else if (type === "Product / Compact Card") {
+            rect("Compact product image field", cx, height * 0.38, width - pad * 2, height * 0.50, Math.round(width * 0.045), col.tint);
+            circle("Product glow", cx + width * 0.14, height * 0.34, width * 0.24, col.accent, 28);
+            circle("Product form", cx, height * 0.39, width * 0.25, col.accent, 92);
+            circle("Product detail highlight", cx, height * 0.39, width * 0.10, col.tint, 90);
+            txt("Product eyebrow", label.toUpperCase(), pad, height * 0.68, smallSize, col.accent, false);
+            txt("Product name", titleText, pad, height * 0.78, titleSize * 0.84, col.fg, false);
+            txt("Product short copy", body, pad, height * 0.88, bodySize, col.muted, false);
+        } else if (type === "Product / Expandable Card") {
+            var compactW = width * 0.82, compactH = height * 0.62;
+            rect("EXPANSION_BOUNDARY_KEYLINE", cx, cy, compactW, compactH, Math.round(width * 0.06), col.line);
+            rect("EXPANSION_BOUNDARY_SURFACE", cx, cy, compactW - 4, compactH - 4, Math.round(width * 0.057), col.bg);
+            rect("Expansion cover", cx, height * 0.40, width * 0.68, height * 0.27, Math.round(width * 0.04), col.tint);
+            circle("Expansion cover accent", cx + width * 0.15, height * 0.39, width * 0.20, col.accent, 90);
+            txt("Expansion label", label.toUpperCase(), pad + width * 0.05, height * 0.60, smallSize, col.accent, false);
+            txt("Expansion title", titleText, pad + width * 0.05, height * 0.70, titleSize * 0.8, col.fg, false);
+            var expansionCopy = txt("EXPANSION_DETAIL Supporting copy", body, pad + width * 0.05, height * 0.82, bodySize, col.muted, false);
+            expansionCopy.name = "EXPANSION_DETAIL Supporting copy";
+            expansionCopy.property("ADBE Transform Group").property("ADBE Opacity").setValue(0);
+            rect("EXPANSION_DETAIL Action surface", pad + width * 0.32, height * 0.92, width * 0.58, height * 0.09, height * 0.045, col.accent, 0);
+            var actionText = txt("EXPANSION_DETAIL Action label", "LEARN MORE", pad + width * 0.40, height * 0.935, smallSize, [1, 1, 1], false);
+            actionText.name = "EXPANSION_DETAIL Action label";
+            actionText.property("ADBE Transform Group").property("ADBE Opacity").setValue(0);
+        } else if (type === "App Store / Product Page") {
+            statusBar();
+            rect("Product app icon", pad + width * 0.14, height * 0.31, width * 0.25, width * 0.25, Math.round(width * 0.055), col.accent);
+            txt("Product app glyph", "A", pad + width * 0.105, height * 0.35, titleSize, [1, 1, 1], false);
+            txt("Store product name", titleText, pad + width * 0.31, height * 0.32, bodySize + 2, col.fg, false);
+            txt("Store product subtitle", "Designed for your day", pad + width * 0.31, height * 0.40, smallSize, col.muted, false);
+            rect("Store get button", width - pad - width * 0.16, height * 0.48, width * 0.15, height * 0.075, height * 0.037, col.tint);
+            txt("Store get label", "GET", width - pad - width * 0.13, height * 0.49, smallSize, col.accent, false);
+            divider(height * 0.57);
+            txt("Store rating", "4.9 ★    AGE 4+    EDITOR’S PICK", pad, height * 0.66, smallSize, col.muted, false);
+            rect("Store preview 1", cx - width * 0.24, height * 0.83, width * 0.36, height * 0.28, Math.round(width * 0.035), col.tint);
+            rect("Store preview 2", cx + width * 0.20, height * 0.83, width * 0.36, height * 0.28, Math.round(width * 0.035), col.surface);
+            txt("Store description", body, pad, height * 0.98, smallSize, col.muted, false);
+        } else if (type === "Editorial / Story Card") {
+            rect("Editorial image field", cx, height * 0.41, width - pad * 2, height * 0.62, Math.round(width * 0.045), col.tint);
+            circle("Editorial color form", cx + width * 0.12, height * 0.34, width * 0.34, col.accent, 88);
+            circle("Editorial light detail", cx - width * 0.14, height * 0.47, width * 0.20, [1, 1, 1], 65);
+            txt("Editorial category", label.toUpperCase(), pad, height * 0.68, smallSize, col.accent, false);
+            txt("Editorial headline", titleText, pad, height * 0.79, titleSize * 0.84, col.fg, false);
+            txt("Editorial caption", body, pad, height * 0.90, bodySize, col.muted, false);
+            txt("Editorial page indicator", "●  ○  ○  ○", width - pad - width * 0.20, height * 0.97, smallSize, col.muted, false);
+        } else if (type === "Accessory / Mini Player") {
+            statusBar();
+            rect("Mini player cover", pad + width * 0.16, height * 0.40, width * 0.27, width * 0.27, Math.round(width * 0.035), col.accent);
+            circle("Mini player disc", pad + width * 0.16, height * 0.40, width * 0.13, col.tint);
+            txt("Mini player title", titleText, pad + width * 0.34, height * 0.37, bodySize, col.fg, false);
+            txt("Mini player artist", body, pad + width * 0.34, height * 0.45, smallSize, col.muted, false);
+            txt("Mini player elapsed", "1:24", pad, height * 0.69, smallSize, col.muted, false);
+            txt("Mini player remaining", "−2:18", width - pad - width * 0.15, height * 0.69, smallSize, col.muted, false);
+            rect("Mini player progress base", cx, height * 0.72, width - pad * 2, width * 0.012, width * 0.006, col.line);
+            rect("Mini player progress fill", pad + width * 0.20, height * 0.72, width * 0.40, width * 0.012, width * 0.006, col.fg);
+            txt("Mini player controls", "|◀       ▶       ▶|", cx - width * 0.20, height * 0.87, bodySize, col.fg, false);
+            txt("Mini player queue", label.toUpperCase(), pad, height * 0.97, smallSize, col.accent, false);
+        } else if (type === "Home / Control Tile") {
+            statusBar();
+            circle("Home accessory icon", pad + width * 0.13, height * 0.32, width * 0.18, col.tint);
+            txt("Home accessory glyph", "H", pad + width * 0.10, height * 0.345, titleSize * 0.75, col.accent, false);
+            txt("Home accessory title", titleText, pad, height * 0.53, titleSize * 0.9, col.fg, false);
+            txt("Home accessory status", body, pad, height * 0.63, bodySize, col.muted, false);
+            rect("Home accessory divider", cx, height * 0.73, width - pad * 2, 1, 0, col.line);
+            txt("Home accessory room", label.toUpperCase(), pad, height * 0.83, smallSize, col.muted, false);
+            rect("Home accessory toggle", width - pad - width * 0.10, height * 0.86, width * 0.15, height * 0.075, height * 0.037, col.accent);
+            circle("Home accessory toggle knob", width - pad - width * 0.065, height * 0.86, height * 0.061, [1, 1, 1]);
         } else {
             txt("Fallback title", titleText, pad, height * 0.4, titleSize, col.fg, false);
             txt("Fallback body", body, pad, height * 0.56, bodySize, col.muted, false);
         }
+
         return cardComp;
     }
     function createLayout() {

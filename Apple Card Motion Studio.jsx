@@ -14,7 +14,7 @@
 
     // Apple-inspired motion: quick, controlled entries, restrained overshoot, clean settles.
     // Translation offsets are relative to comp dimensions; all presets settle at the original transform.
-    var C = "Slide & Reveal", P = "Scale & Settle", D = "Stack & Cascade", F = "Float & Tilt", G = "Apple Signature", X = "Exit / Dismiss";
+    var C = "Slide & Reveal", P = "Scale & Settle", D = "Stack & Cascade", F = "Float & Tilt", G = "Apple Signature", X = "Exit / Dismiss", E = "Card Expansion";
     add(C, "01 · Clean Rise", "Naik halus · rapi", [[0, 0, 0.07, 0.99, 0, 0], [0.76, 0, -0.004, 1.006, 0.9, 0], END]);
     add(C, "02 · Glide from Left", "Geser pendek dari kiri", [[0, -0.12, 0, 0.99, 0, 0], [0.78, 0.004, 0, 1.006, 0.9, 0], END]);
     add(C, "03 · Glide from Right", "Geser pendek dari kanan", [[0, 0.12, 0, 0.99, 0, 0], [0.78, -0.004, 0, 1.006, 0.9, 0], END]);
@@ -53,6 +53,11 @@
     add(X, "29 · Dismiss · Up", "Geser naik + fade", [[0, 0, 0, 1, 1, 0], [1, 0, -0.075, 0.985, 0, 0]]);
     add(X, "30 · Dismiss · Left", "Keluar ke kiri · fade halus", [[0, 0, 0, 1, 1, 0], [0.82, -0.065, 0, 0.99, 0.25, 0], [1, -0.09, 0, 0.98, 0, 0]]);
 
+    add(E, "31 · Expand Boundary + Reveal", "Perbesar shape saja · detail menyusul, teks tidak melar", [[0, 0, 0, 1, 1, 0], END]);
+    PRESETS[PRESETS.length - 1].cardExpansion = "open";
+    add(E, "32 · Collapse to Compact", "Sembunyikan detail · kembalikan boundary ke kartu ringkas", [[0, 0, 0, 1, 1, 0], END]);
+    PRESETS[PRESETS.length - 1].cardExpansion = "close";
+
     var ui = (thisObj instanceof Panel) ? thisObj : new Window("palette", TITLE, undefined, { resizeable: true });
     ui.orientation = "column";
     ui.alignChildren = ["fill", "top"];
@@ -65,7 +70,7 @@
     header.alignChildren = ["fill", "top"];
     header.spacing = 4;
     header.margins = 10;
-    header.add("statictext", undefined, "30 motion preset Apple-inspired · entry & exit");
+    header.add("statictext", undefined, "32 motion preset Apple-inspired · entry, exit & expand");
     header.add("statictext", undefined, "Teks dan artwork tetap editable · tanpa flatten / render ulang");
 
     var browse = ui.add("panel", undefined, "CARI PRESET");
@@ -77,13 +82,13 @@
     categoryRow.orientation = "row";
     categoryRow.alignChildren = ["left", "center"];
     categoryRow.add("statictext", undefined, "Kategori");
-    var category = categoryRow.add("dropdownlist", undefined, ["Semua 30", C, P, D, F, G, X]);
+    var category = categoryRow.add("dropdownlist", undefined, ["Semua 32", C, P, D, F, G, X, E]);
     category.selection = 0;
     category.alignment = ["fill", "center"];
     var search = browse.add("edittext", undefined, "");
     search.helpTip = "Cari nama atau jenis gerak kartu";
     search.minimumSize.height = 25;
-    var resultText = browse.add("statictext", undefined, "30 preset gerak kartu");
+    var resultText = browse.add("statictext", undefined, "32 preset gerak kartu");
 
     var catalog = ui.add("panel", undefined, "MOTION PRESETS");
     catalog.orientation = "column";
@@ -147,6 +152,8 @@
     timingRow.add("statictext", undefined, "Durasi");
     var durationInput = timingRow.add("edittext", undefined, "0.32");
     durationInput.characters = 6;
+    var durationWasEdited = false;
+    durationInput.onChanging = function () { durationWasEdited = true; };
     timingRow.add("statictext", undefined, "detik");
     timingRow.add("statictext", undefined, "  Jarak stagger");
     var staggerInput = timingRow.add("edittext", undefined, "0.08");
@@ -169,12 +176,12 @@
 
     var pageSize = 6, currentPage = 0, filtered = [];
     function refresh() {
-        var cat = category.selection ? category.selection.text : "Semua 30";
+        var cat = category.selection ? category.selection.text : "Semua 32";
         var q = String(search.text || "").toLowerCase();
         filtered = [];
         var i;
         for (i = 0; i < PRESETS.length; i++) {
-            if (cat !== "Semua 30" && PRESETS[i].category !== cat) continue;
+            if (cat !== "Semua 32" && PRESETS[i].category !== cat) continue;
             if (q && PRESETS[i].name.toLowerCase().indexOf(q) < 0 && PRESETS[i].description.toLowerCase().indexOf(q) < 0 && PRESETS[i].category.toLowerCase().indexOf(q) < 0) continue;
             filtered.push(i);
         }
@@ -288,6 +295,55 @@
         }
         return didApply;
     }
+    function animateCardExpansion(layer, direction, parentStart, duration) {
+        var source = null;
+        try { source = layer.source; } catch (eSource) { return false; }
+        if (!(source instanceof CompItem)) return false;
+        var localStart = parentStart - layer.startTime;
+        if (localStart < 0) localStart = 0;
+        var changed = false, i, child;
+        for (i = 1; i <= source.numLayers; i++) {
+            child = source.layer(i);
+            if (child.name.indexOf("EXPANSION_BOUNDARY_") === 0) {
+                try {
+                    var root = child.property("ADBE Root Vectors Group");
+                    var group = root.property(1);
+                    var vectors = group.property("ADBE Vectors Group");
+                    var rectangle = vectors.property("ADBE Vector Shape - Rect");
+                    var size = rectangle.property("ADBE Vector Rect Size");
+                    var currentSize = size.valueAtTime(localStart, false);
+                    var inset = child.name.indexOf("SURFACE") >= 0 ? 4 : 2;
+                    var target = direction === "open" ? [source.width - inset, source.height - inset] : [source.width * 0.82 - (inset === 4 ? 4 : 0), source.height * 0.62 - (inset === 4 ? 4 : 0)];
+                    var sizeStates = direction === "open" ? [[0, currentSize], [0.68, target]] : [[0, currentSize], [0.72, target]];
+                    keyProperty(size, currentSize, sizeStates, function (base, state) { return state[1]; }, localStart, duration);
+                    var roundness = rectangle.property("ADBE Vector Rect Roundness");
+                    var baseRound = roundness.valueAtTime(localStart, false);
+                    var targetRound = Math.min(source.width, source.height) * 0.06;
+                    keyProperty(roundness, baseRound, direction === "open" ? [[0, baseRound], [0.68, targetRound]] : [[0, baseRound], [0.72, targetRound]], function (base, state) { return state[1]; }, localStart, duration);
+                    changed = true;
+                } catch (eBoundary) {}
+            }
+            if (child.name.indexOf("EXPANSION_DETAIL") === 0) {
+                try {
+                    var childTransform = child.property("ADBE Transform Group");
+                    var childOpacity = childTransform.property("ADBE Opacity");
+                    var childPosition = childTransform.property("ADBE Position");
+                    if (childOpacity && !childOpacity.expressionEnabled) {
+                        var baseOpacity = childOpacity.valueAtTime(localStart, false);
+                        var opacityStates = direction === "open" ? [[0.42, 0], [0.86, 100]] : [[0.16, baseOpacity], [0.48, 0]];
+                        keyProperty(childOpacity, baseOpacity, opacityStates, function (base, state) { return state[1]; }, localStart, duration);
+                    }
+                    if (childPosition && !childPosition.expressionEnabled) {
+                        var basePosition = childPosition.valueAtTime(localStart, false), offsetPosition = [basePosition[0], basePosition[1] + source.height * 0.035];
+                        var positionStates = direction === "open" ? [[0.42, offsetPosition], [0.86, basePosition]] : [[0.16, basePosition], [0.48, offsetPosition]];
+                        keyProperty(childPosition, basePosition, positionStates, function (base, state) { return state[1]; }, localStart, duration);
+                    }
+                    changed = true;
+                } catch (eDetail) {}
+            }
+        }
+        return changed;
+    }
     function applyPreset(index) {
         var preset = PRESETS[index];
         var comp = app.project ? app.project.activeItem : null;
@@ -300,7 +356,9 @@
             status.text = "Pilih layer kartu, teks, shape, atau artwork di timeline.";
             return;
         }
-        var duration = numberValue(durationInput, 0.32, 0.1, 10);
+        var durationFallback = preset.cardExpansion ? 0.48 : 0.32;
+        if (!durationWasEdited) durationInput.text = String(durationFallback);
+        var duration = numberValue(durationInput, durationFallback, 0.1, 10);
         var stagger = numberValue(staggerInput, 0.08, 0, 2);
         var startTime = comp.time, applied = 0, skipped = 0, i, layer, offset, layerStart;
         app.beginUndoGroup("Card Motion · " + preset.name);
@@ -310,14 +368,17 @@
                 offset = (order.selection && order.selection.index === 1) ? (selected.length - 1 - i) : i;
                 layerStart = startTime + offset * stagger;
                 try {
-                    if (animateLayer(layer, comp, preset, layerStart, duration)) applied++;
+                    var didApply = preset.cardExpansion ? animateCardExpansion(layer, preset.cardExpansion, layerStart, duration) : animateLayer(layer, comp, preset, layerStart, duration);
+                    if (didApply) applied++;
                     else skipped++;
                 } catch (layerError) { skipped++; }
             }
         } finally {
             app.endUndoGroup();
         }
-        if (applied) status.text = "“" + preset.name + "” diterapkan ke " + applied + " layer mulai dari playhead. Stagger " + stagger + " dtk; teks dan isi layer tidak diubah." + (skipped ? " " + skipped + " layer dilewati." : "") + " Undo: Ctrl/Cmd+Z.";
+        if (preset.cardExpansion && !applied) status.text = "Preset ini khusus untuk layer dari template Product / Expandable Card. Buat atau pilih precomp kartu expandable terlebih dahulu.";
+        else if (applied && preset.cardExpansion) status.text = "“" + preset.name + "” menganimasikan ukuran boundary dan reveal detail di dalam card comp—bukan men-scale seluruh UI. " + applied + " kartu diproses; stagger " + stagger + " dtk. Undo: Ctrl/Cmd+Z.";
+        else if (applied) status.text = "“" + preset.name + "” diterapkan ke " + applied + " layer mulai dari playhead. Stagger " + stagger + " dtk; teks dan isi layer tidak diubah." + (skipped ? " " + skipped + " layer dilewati." : "") + " Undo: Ctrl/Cmd+Z.";
         else status.text = "Tidak ada layer yang berhasil dianimasikan. Periksa layer terpilih dan expression pada transform.";
     }
 
