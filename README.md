@@ -10,8 +10,8 @@ Panel ScriptUI `.jsx` berisi **60 animasi entrance teks** dengan gaya motion gra
 
 1. Buka EffectCraft.
 2. Pilih **Effect ▸ Install Effect Plug-in Bundle (Folder)…** (atau menu instalasi bundle yang tersedia di versi Anda), lalu pilih folder repo ini. EffectCraft memasang berkas `.jsx` sebagai ScriptUI panel.
-3. Buka panel dari **Window ▸ Text Animation Studio.jsx** atau **Window ▸ Curve Studio.jsx**. Jika tidak langsung terlihat, periksa submenu panel.
-4. Di Text Animation Studio, pilih preset pada katalog kartu dua kolom dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe di timeline, pilih preset curve atau atur influence/speed sendiri, lalu klik **APPLY CURVE**.
+3. Buka panel dari **Window ▸ Text Animation Studio.jsx**, **Window ▸ Curve Studio.jsx**, atau **Window ▸ Motion FX Studio.jsx**. Jika tidak langsung terlihat, periksa submenu panel.
+4. Di Text Animation Studio, pilih preset dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe, pilih preset atau atur influence/speed, lalu klik **APPLY CURVE**. Di Motion FX Studio, pilih layer dan klik kartu FX untuk menambahkan effect stack.
 
 **Alternatif:** pasang masing-masing berkas `.jsx` melalui **File ▸ Scripts ▸ Install ScriptUI Panel…**. Jika hanya menjalankan berkas melalui **Run Script File…**, panel akan terbuka sebagai palette mengambang.
 
@@ -32,3 +32,9 @@ Hampir semua preset menggerakkan seluruh text layer; pengecualiannya adalah **Wo
 Panel kurva easing dengan editor grafik bercahaya, kontrol **Out/In Influence** dan **Out/In Speed**, serta delapan preset: Linear, Soft S, Ease In, Ease Out, Ease In-Out, Snappy, Gentle, dan Overshoot. Pilih mode sisi **In & Out**, **In only**, atau **Out only**, lalu terapkan ke keyframe terpilih sebagai satu langkah undo. Speed preset dihitung relatif terhadap kecepatan rata-rata segmen tiap properti.
 
 Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · [`Curve Studio.jsx`](./Curve%20Studio.jsx)
+
+## 3. Motion FX Studio
+
+Katalog kartu glow dua kolom berisi effect stack yang terinspirasi workflow Alight Motion: Neon Bloom, Soft Bloom, Dream Blur, Directional Smear, Chromatic Shift, Echo Trails, Wave Warp, Cinematic Vignette, Film Grain, dan Neon RGB. Panel memakai effect native EffectCraft, menerapkan stack ke layer terpilih, lalu parameternya bisa disesuaikan lagi di **Effect Controls**.
+
+Berkas utama: [`Motion FX Studio.jsx`](./Motion%20FX%20Studio.jsx)
