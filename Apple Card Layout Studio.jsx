@@ -11,7 +11,7 @@
     ui.alignChildren = ["fill", "top"];
     ui.spacing = 7;
     ui.margins = 10;
-    ui.minimumSize = [380, 650];
+    ui.minimumSize = [360, 350];
 
     var header = ui.add("panel", undefined, "APPLE CARD LAYOUT STUDIO");
     header.orientation = "column";
@@ -19,7 +19,7 @@
     header.spacing = 3;
     header.margins = 9;
     header.add("statictext", undefined, "20 template UI editable · termasuk Liquid Glass-inspired");
-    header.add("statictext", undefined, "Teks hidup · shape vector · tiap kartu bisa diedit terpisah");
+    header.add("statictext", undefined, "Edit judul dan isi langsung di dalam precomp kartu");
 
     var design = ui.add("panel", undefined, "PILIH DESAIN");
     design.orientation = "column";
@@ -41,40 +41,16 @@
     var themeType = dropdownRow(design, "Tema", ["Light", "Dark", "Vibrant"], 0);
     var countType = dropdownRow(design, "Jumlah kartu", ["1", "2", "3", "4", "5", "6"], 4);
 
-    var content = ui.add("panel", undefined, "KONTEN — satu kartu per baris");
-    content.orientation = "column";
-    content.alignChildren = ["fill", "top"];
-    content.spacing = 4;
-    content.margins = 9;
-    content.add("statictext", undefined, "Judul");
-    var titles = content.add("edittext", undefined, "Pesan baru\nDesember 10\nProfil kreator\nNow Playing\nAplikasi favorit", { multiline: true, scrolling: true });
-    titles.preferredSize = [0, 54];
-    content.add("statictext", undefined, "Deskripsi / isi");
-    var details = content.add("edittext", undefined, "A little note for today.\nDecember · Tuesday\nMake it yours.\nNew music for you.\nIdeas in motion.", { multiline: true, scrolling: true });
-    details.preferredSize = [0, 54];
-    content.add("statictext", undefined, "Label kecil / tanggal");
-    var labels = content.add("edittext", undefined, "MESSAGE\n10\nCREATOR\nPLAYING\nFEATURED", { multiline: true, scrolling: true });
-    labels.preferredSize = [0, 43];
-
     var action = ui.add("panel", undefined, "BUAT KARTU");
     action.orientation = "column";
     action.alignChildren = ["fill", "top"];
     action.margins = 9;
     var buildButton = action.add("button", undefined, "BUAT LAYOUT KARTU EDITABLE");
     buildButton.preferredSize.height = 32;
-    var status = action.add("statictext", undefined, "Buka composition, atur isi kartu, lalu buat. Kartu akan dibuat di sekitar tengah frame.", { multiline: true });
+    var status = action.add("statictext", undefined, "Pilih template dan jumlah kartu. Ubah teks setelah dibuat dengan membuka precomp kartu.", { multiline: true });
     status.minimumSize.height = 36;
 
     function selectedText(control) { return control.selection ? control.selection.text : ""; }
-    function linesFrom(text) {
-        var raw = String(text || "").split(/\r\n|\n|\r/), result = [], i, value;
-        for (i = 0; i < raw.length; i++) {
-            value = raw[i].replace(/^\s+|\s+$/g, "");
-            if (value) result.push(value);
-        }
-        return result;
-    }
-    function valueFor(list, i, fallback) { return list.length ? list[i % list.length] : fallback; }
     function wrapText(text, maxChars) {
         var words = String(text).split(/\s+/), result = "", line = "", i;
         for (i = 0; i < words.length; i++) {
@@ -86,6 +62,32 @@
         }
         if (line) result += (result ? "\r" : "") + line;
         return result;
+    }
+    function defaultCardContent(type, index) {
+        var bank = {
+            "Notification / Lock Screen": [["Gate A10", "Team meeting", "Package delivered", "New message", "Flight update", "Daily summary"], ["Boarding begins in 25 minutes.", "Design review starts at 10:30.", "Your order is at the door.", "Are we still on for today?", "SFO to JFK · On time.", "You have 3 updates to review."], ["NOW", "10:30 AM", "DELIVERY", "MESSAGES", "ON TIME", "TODAY"]],
+            "Settings / Dark UI": [["Airplane Mode", "Wi-Fi", "Bluetooth", "Focus", "Display", "Sounds"], ["Turn connections on or off.", "Connected to Studio Network.", "Ready to connect nearby.", "Personal focus is active.", "Appearance and brightness.", "Ringer and alerts."], ["SETTINGS", "CONNECTED", "AVAILABLE", "PERSONAL", "DISPLAY", "SOUNDS"]],
+            "Widget / Dashboard": [["Weekly Activity", "Screen Time", "Daily Steps", "Weather", "Portfolio", "Energy Use"], ["A good week starts with small steps.", "Down 18% compared with last week.", "You are close to your daily goal.", "Clear skies through the afternoon.", "Markets are up 2.4% today.", "Usage is lower than yesterday."], ["THIS WEEK", "7-DAY VIEW", "TODAY", "JAKARTA", "MARKET", "HOME"]],
+            "Media Player": [["Morning Light", "Ambient Waves", "City at Night", "New Music Mix", "Deep Focus", "Daily Replay"], ["Mira Sol · Soft pop", "Ocean Sounds · 45 min", "Various Artists · Radio", "Made for your morning.", "Instrumental · No vocals", "Your most played this week."], ["PLAYING NOW", "SLEEP SOUNDS", "RADIO", "MIX 01", "FOCUS", "REPLAY"]],
+            "App Store Feature": [["Photo Studio", "Fitness Tracker", "Maps & Trails", "Notes, Made Simple", "Healthy Habits", "Daily Journal"], ["A little more room to create.", "Build a routine that feels good.", "Find a new way outside.", "Capture thoughts as they happen.", "Small steps, lasting change.", "Make a moment of every day."], ["CREATIVITY", "HEALTH & FITNESS", "TRAVEL", "PRODUCTIVITY", "WELLNESS", "LIFESTYLE"]],
+            "Message Thread": [["Emma Chen", "Alex Morgan", "Design Team", "Family", "Jordan Lee", "Sam Rivera"], ["Are we still on for today?", "Just sent you the photos.", "The new build looks great.", "Dinner at seven?", "I will meet you there.", "Thanks, talk soon!"], ["TODAY  9:41 AM", "YESTERDAY", "3 MEMBERS", "4 MEMBERS", "ACTIVE NOW", "DELIVERED"]],
+            "Liquid Glass / Control Center": [["Control Center", "Quick Controls", "Now Playing", "Home Controls", "Brightness", "Connectivity"], ["Your essential controls, one swipe away.", "Adjust settings at a glance.", "A quiet mix for this moment.", "Everything at home, in one place.", "Tune the display to your space.", "Stay connected wherever you go."], ["CONTROLS", "DEVICE", "AUDIO", "HOME", "DISPLAY", "NETWORK"]],
+            "Liquid Glass / Tab Bar": [["Explore", "Your Library", "Games", "Apps", "Arcade", "Search"], ["Find something wonderful today.", "Everything you have saved.", "A new favorite is waiting.", "Made for your everyday.", "Play, discover, repeat.", "Find exactly what you need."], ["TODAY", "LIBRARY", "GAMES", "APPS", "ARCADE", "SEARCH"]],
+            "Liquid Glass / Toolbar": [["New Collection", "Your Workspace", "Photo Details", "Reading List", "Shared Album", "Quick Actions"], ["A few useful actions, right where you need them.", "Keep your favorite things close.", "Tools float above the content.", "Pick up where you left off.", "A place for everyone's photos.", "Simple controls for the moment."], ["EDIT", "WORKSPACE", "PHOTO", "BOOKMARKS", "SHARED", "ACTIONS"]],
+            "Liquid Glass / Segmented": [["Browse", "Highlights", "Recent", "Favorites", "Shared", "Updates"], ["Move between sections without losing your place.", "The latest things, picked for you.", "Your recent activity in one view.", "The things you come back to.", "Made better together.", "Everything new since your last visit."], ["TODAY", "FEATURED", "RECENT", "SAVED", "PEOPLE", "LATEST"]],
+            "Live Activity / Dynamic Island": [["Flight to SFO", "Timer", "Order on the way", "Morning Run", "Car arriving", "Event starts soon"], ["Boarding begins in 25 minutes.", "A little time left to focus.", "Your order is around the corner.", "4.2 km · feeling good.", "Driver is 2 minutes away.", "Doors open in 10 minutes."], ["GATE A10", "02:14", "2 MIN", "LIVE", "NEARBY", "10 MIN"]],
+            "Spotlight / Search": [["Search your library", "Find a place", "Search photos", "Recent files", "Explore apps", "Look something up"], ["Suggested results appear as you type.", "Places, routes, and favorites.", "People, moments, and locations.", "Pick up where you left off.", "Discover something useful.", "Your search, made simpler."], ["SUGGESTIONS", "MAPS", "PHOTOS", "RECENTS", "APP LIBRARY", "SEARCH"]],
+            "Sidebar / Navigation": [["Your Library", "Favorites", "Recently Added", "Downloads", "Shared with You", "Playlists"], ["Everything you have collected.", "The things you love most.", "New additions, all together.", "Available whenever you are.", "Things shared by your friends.", "A soundtrack for every day."], ["BROWSE", "SAVED", "COLLECTION", "OFFLINE", "SHARED", "MUSIC"]],
+            "App Icon Grid": [["App Library", "Today", "Create", "Stay Connected", "Daily Tools", "Discover"], ["Your everyday apps, in one place.", "A little inspiration for today.", "Ideas begin with a blank page.", "Keep your favorite people close.", "Small tools for daily life.", "Find something new to love."], ["ALL APPS", "FEATURED", "CREATE", "SOCIAL", "PRODUCTIVITY", "EXPLORE"]],
+            "Weather / Widget": [["Jakarta", "San Francisco", "London", "Tokyo", "New York", "Singapore"], ["Partly cloudy · H 29°  L 24°", "Mostly sunny · H 21°  L 14°", "Light rain · H 16°  L 11°", "Clear skies · H 22°  L 16°", "Breezy · H 18°  L 12°", "Warm and humid · H 31°  L 26°"], ["TODAY", "LOCAL TIME", "FORECAST", "7-DAY", "CURRENT", "HOURLY"]],
+            "Finance / Stocks": [["Apple Inc.", "Market Overview", "Your Portfolio", "Technology", "Sustainable Energy", "Daily Movers"], ["AAPL · Technology · +2.46% today.", "Major indexes are trending higher.", "Your portfolio is up this week.", "A quick look at the market.", "Clean energy gains momentum.", "The biggest changes today."], ["AAPL", "MARKET", "PORTFOLIO", "NASDAQ", "GREEN", "TODAY"]],
+            "Smart Stack / Widgets": [["Daily Overview", "Up Next", "Activity", "Travel Day", "Workday", "At Home"], ["Your day, at a glance.", "A meeting starts in 15 minutes.", "You are close to your move goal.", "Boarding time is coming up.", "Two things left on your list.", "The lights are ready when you are."], ["SMART STACK", "CALENDAR", "FITNESS", "TRAVEL", "REMINDERS", "HOME"]],
+            "Notification Stack": [["Recent Activity", "Messages", "Orders", "Reminders", "Shared Albums", "Your Daily Brief"], ["The latest updates, all together.", "Emma sent you a new message.", "Your delivery is arriving soon.", "One item is due this afternoon.", "Three new photos were added.", "Your day is looking clear."], ["TODAY", "NOW", "2 MIN AGO", "10:30 AM", "YESTERDAY", "9:00 AM"]],
+            "Focus / Control Tile": [["Personal Focus", "Work Focus", "Sleep Focus", "Do Not Disturb", "Reading Focus", "Fitness Focus"], ["Only the notifications you choose.", "Stay present with your work.", "Wind down and rest well.", "Quiet for a little while.", "A calmer space to read.", "Make room to move."], ["FOCUS ON", "WORK", "SLEEP", "PAUSED", "READING", "ACTIVE"]],
+            "Calendar / Event": [["Planning Session", "Team Sync", "Lunch with Maya", "Project Review", "Product Launch", "Focus Block"], ["Studio · 10:00–10:45 AM", "Design room · 11:30 AM", "Cafe Linden · 12:30 PM", "Conference A · 2:00 PM", "Main stage · 4:00 PM", "Time to make progress."], ["MON · DEC 10", "TODAY", "12:30 PM", "2:00 PM", "4:00 PM", "ALL DAY"]]
+        };
+        var data = bank[type] || bank["Notification / Lock Screen"];
+        return { title: data[0][index % data[0].length], detail: data[1][index % data[1].length], label: data[2][index % data[2].length] };
     }
     function colorCopy(color) { return [color[0], color[1], color[2]]; }
     function shapeRect(comp, name, x, y, w, h, radius, color, opacity) {
@@ -429,7 +431,6 @@
         }
         var count = parseInt(selectedText(countType), 10);
         if (isNaN(count) || count < 1) count = 1;
-        var titleList = linesFrom(titles.text), detailList = linesFrom(details.text), labelList = linesFrom(labels.text);
         var type = selectedText(cardType), layout = selectedText(layoutType), theme = selectedText(themeType);
         var width, height, xPositions = [], yPositions = [], rotations = [], scales = [], i;
         if (layout === "Kartu kipas bertumpuk") {
@@ -471,9 +472,8 @@
         app.beginUndoGroup("Create Editable Apple Card Layout");
         try {
             for (i = 0; i < count; i++) {
-                var title = valueFor(titleList, i, "Card " + (i + 1));
-                var detail = valueFor(detailList, i, "Edit this text in the card composition.");
-                var label = valueFor(labelList, i, "FEATURE");
+                var cardCopy = defaultCardContent(type, i);
+                var title = cardCopy.title, detail = cardCopy.detail, label = cardCopy.label;
                 var cardComp = makeCardComp(comp, i, title, detail, label, type, theme, width, height);
                 var cardLayer = comp.layers.add(cardComp);
                 cardLayer.name = "Card " + (i + 1) + " — " + title;
@@ -493,7 +493,7 @@
         } finally {
             app.endUndoGroup();
         }
-        if (made) status.text = made + " kartu dibuat sebagai precomp editable di sekitar playhead. Double-click layer kartu untuk mengedit teks/shape. Layer kartu terpilih; gunakan Apple Card Motion Studio untuk preset animasi. Undo: Ctrl/Cmd+Z.";
+        if (made) status.text = made + " kartu dibuat. Double-click layer precomp kartu, lalu edit text layer langsung di dalam card. Layer kartu terpilih untuk Apple Card Motion Studio. Undo: Ctrl/Cmd+Z.";
         else if (!status.text) status.text = "Layout belum dibuat. Pastikan composition mendukung shape dan text layer.";
     }
 
