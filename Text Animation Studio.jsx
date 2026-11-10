@@ -83,54 +83,180 @@
     add(A, "57 · Signature · Minimal Pop", [[0, 0, 0, 0.95, 0, 0], [0.72, 0, 0, 1.02, 0.88, 0], FINAL]);
     add(A, "58 · Signature · Upward Bloom", [[0, 0, 0.07, 0.9, 0, 0], [0.72, 0, -0.004, 1.02, 0.87, 0], FINAL]);
     add(A, "59 · Signature · Modern Tilt", [[0, 0, 0.025, 0.96, 0, 4], [0.74, 0, 0, 1.012, 0.86, -1], FINAL]);
-    add(A, "60 · Signature · Slow Reveal", [[0, 0, 0.018, 0.99, 0, 0], [0.58, 0, 0.004, 1.005, 0.65, 0], FINAL]);
+    add(A, "60 · Signature · Word-by-Word Drop", [[0, 0, 0, 1, 0, 0], FINAL]);
+    PRESETS[PRESETS.length - 1].wordDrop = true;
 
     var ui = (thisObj instanceof Panel) ? thisObj : new Window("palette", TITLE, undefined, { resizeable: true });
     ui.orientation = "column";
     ui.alignChildren = ["fill", "top"];
-    ui.spacing = 7;
+    ui.spacing = 8;
     ui.margins = 12;
+    ui.minimumSize = [350, 620];
 
-    var intro = ui.add("statictext", undefined, "60 animasi entrance teks yang halus dan minimal");
-    var categoryRow = ui.add("group");
+    var headerCard = ui.add("panel", undefined, "TEXT ANIMATION STUDIO");
+    headerCard.orientation = "column";
+    headerCard.alignChildren = ["fill", "top"];
+    headerCard.margins = 10;
+    var intro = headerCard.add("statictext", undefined, "60 preset motion yang halus · terinspirasi Apple");
+
+    var previewCard = ui.add("panel", undefined, "LIVE PREVIEW");
+    previewCard.orientation = "column";
+    previewCard.alignChildren = ["fill", "top"];
+    previewCard.spacing = 6;
+    previewCard.margins = 10;
+    var previewCanvas = previewCard.add("panel", undefined, "");
+    previewCanvas.preferredSize = [320, 112];
+    previewCanvas.minimumSize.height = 90;
+    var previewInputRow = previewCard.add("group");
+    previewInputRow.orientation = "row";
+    previewInputRow.alignChildren = ["fill", "center"];
+    previewInputRow.add("statictext", undefined, "Teks");
+    var previewTextInput = previewInputRow.add("edittext", undefined, "Think Different");
+    previewTextInput.characters = 18;
+    var previewControlRow = previewCard.add("group");
+    previewControlRow.orientation = "row";
+    previewControlRow.alignChildren = ["left", "center"];
+    var previewToggle = previewControlRow.add("checkbox", undefined, "Preview ON");
+    previewToggle.value = true;
+    previewControlRow.add("statictext", undefined, "Scrub");
+    var previewProgress = previewControlRow.add("slider", undefined, 55, 0, 100);
+    previewProgress.alignment = ["fill", "center"];
+
+    var presetCard = ui.add("panel", undefined, "PILIH ANIMASI");
+    presetCard.orientation = "column";
+    presetCard.alignChildren = ["fill", "top"];
+    presetCard.spacing = 6;
+    presetCard.margins = 10;
+    var categoryRow = presetCard.add("group");
     categoryRow.orientation = "row";
     categoryRow.alignChildren = ["left", "center"];
     categoryRow.add("statictext", undefined, "Kategori");
-    var category = categoryRow.add("dropdownlist", undefined, ["All 60", F, S, Z, R, B, A]);
+    var category = categoryRow.add("dropdownlist", undefined, ["Semua 60", F, S, Z, R, B, A]);
     category.selection = 0;
     category.alignment = ["fill", "center"];
-
-    var search = ui.add("edittext", undefined, "");
+    var search = presetCard.add("edittext", undefined, "");
     search.helpTip = "Ketik untuk mencari preset berdasarkan nama";
-    search.minimumSize.height = 26;
-    var list = ui.add("listbox", undefined, [], { multiselect: false });
-    list.preferredSize = [300, 280];
-    list.minimumSize.height = 130;
+    search.minimumSize.height = 25;
+    var list = presetCard.add("listbox", undefined, [], { multiselect: false });
+    list.preferredSize = [320, 175];
+    list.minimumSize.height = 115;
+    var detail = presetCard.add("statictext", undefined, "Pilih preset untuk melihat deskripsi.", { multiline: true });
+    detail.minimumSize.height = 30;
 
-    var detail = ui.add("statictext", undefined, "Pilih preset untuk melihat kategorinya.", { multiline: true });
-    detail.minimumSize.height = 34;
-    var durationRow = ui.add("group");
+    var applyCard = ui.add("panel", undefined, "PENERAPAN");
+    applyCard.orientation = "column";
+    applyCard.alignChildren = ["fill", "top"];
+    applyCard.spacing = 6;
+    applyCard.margins = 10;
+    var durationRow = applyCard.add("group");
     durationRow.orientation = "row";
     durationRow.alignChildren = ["left", "center"];
-    durationRow.add("statictext", undefined, "Durasi (detik)");
+    durationRow.add("statictext", undefined, "Durasi animasi (detik)");
     var durationInput = durationRow.add("edittext", undefined, "0.8");
     durationInput.characters = 6;
     durationInput.helpTip = "Durasi animasi, dari 0,1 hingga 20 detik";
-
-    var applyButton = ui.add("button", undefined, "Terapkan ke Text Layer Terpilih");
+    var applyButton = applyCard.add("button", undefined, "Terapkan ke Text Layer Terpilih");
     applyButton.preferredSize.height = 34;
-    var status = ui.add("statictext", undefined, "Pilih text layer, lalu tentukan waktu mulai lewat playhead.", { multiline: true });
-    status.minimumSize.height = 36;
+    var status = applyCard.add("statictext", undefined, "Pilih text layer, lalu tentukan waktu mulai lewat playhead.", { multiline: true });
+    status.minimumSize.height = 34;
+
+    function getSelectedPreset() {
+        return list.selection ? PRESETS[list.selection.presetIndex] : null;
+    }
+
+    function previewState(preset, progress) {
+        if (!preset || preset.wordDrop) return FINAL;
+        var t = progress / 100;
+        var states = preset.states;
+        var i;
+        if (t <= states[0][0]) return states[0];
+        for (i = 0; i < states.length - 1; i++) {
+            if (t <= states[i + 1][0]) {
+                var a = states[i], b = states[i + 1];
+                var span = b[0] - a[0];
+                var f = span <= 0 ? 1 : (t - a[0]) / span;
+                var state = [], j;
+                for (j = 0; j < 6; j++) state.push(a[j] + (b[j] - a[j]) * f);
+                return state;
+            }
+        }
+        return states[states.length - 1];
+    }
+
+    function drawPreview() {
+        try {
+            var g = previewCanvas.graphics;
+            var w = previewCanvas.size.width;
+            var h = previewCanvas.size.height;
+            var bg = g.newBrush(g.BrushType.SOLID_COLOR, [0.075, 0.09, 0.12, 1]);
+            var accent = g.newBrush(g.BrushType.SOLID_COLOR, [0.22, 0.62, 0.98, 1]);
+            g.fillRect(bg, 0, 0, w, h);
+            var progress = previewToggle.value ? previewProgress.value : 100;
+            var preset = getSelectedPreset();
+            var label = String(previewTextInput.text || "YOUR TITLE");
+            var pen, font, x, y, words, wordCount, settled, frac, word, wi, wordWidth, allWidth;
+            if (preset && preset.wordDrop && previewToggle.value) {
+                words = label.split(/\s+/);
+                wordCount = words.length;
+                if (!wordCount) wordCount = 1;
+                var exact = progress * wordCount / 100;
+                settled = Math.floor(exact);
+                frac = exact - settled;
+                font = g.newFont("Arial", "BOLD", 18);
+                allWidth = 0;
+                for (wi = 0; wi < words.length; wi++) allWidth += Math.max(12, words[wi].length * 10);
+                allWidth += Math.max(0, words.length - 1) * 7;
+                x = Math.max(10, (w - allWidth) / 2);
+                y = h / 2 - 8;
+                for (wi = 0; wi < words.length; wi++) {
+                    var amount = wi < settled ? 1 : (wi === settled ? frac : 0);
+                    var lift = (1 - amount) * 28;
+                    var shade = Math.max(0.25, amount);
+                    pen = g.newPen(g.PenType.SOLID_COLOR, [0.94 * shade, 0.96 * shade, 1 * shade, 1], 1);
+                    word = words[wi];
+                    g.drawString(word, pen, x, y - lift, font);
+                    wordWidth = Math.max(12, word.length * 10);
+                    x += wordWidth + 7;
+                }
+            } else {
+                var state = previewToggle.value ? previewState(preset, progress) : FINAL;
+                var alpha = Math.max(0, Math.min(1, state[4]));
+                var size = Math.max(9, Math.min(34, 21 * state[3]));
+                font = g.newFont("Arial", "BOLD", size);
+                pen = g.newPen(g.PenType.SOLID_COLOR, [0.94 * alpha, 0.96 * alpha, 1 * alpha, 1], 1);
+                var approxWidth = label.length * size * 0.56;
+                x = Math.max(8, (w - approxWidth) / 2 + state[1] * w);
+                y = h / 2 - 7 + state[2] * h;
+                if (state[5] !== 0) x += state[5] * 0.12;
+                g.drawString(label, pen, x, y, font);
+            }
+            g.fillRect(accent, 8, h - 7, Math.max(2, (w - 16) * progress / 100), 2);
+        } catch (drawError) {
+            // If the host lacks a ScriptUI graphics method, the preset controls remain usable.
+        }
+    }
+
+    function redrawPreview() {
+        try { previewCanvas.onDraw.call(previewCanvas); } catch (e) {}
+        try { previewCanvas.notify("onDraw"); } catch (e2) {}
+        try { if (ui.update) ui.update(); } catch (e3) {}
+    }
+
+    previewCanvas.onDraw = drawPreview;
+    previewToggle.onClick = redrawPreview;
+    previewProgress.onChanging = redrawPreview;
+    previewProgress.onChange = redrawPreview;
+    previewTextInput.onChanging = redrawPreview;
 
     function refreshList() {
-        var selectedCategory = category.selection ? category.selection.text : "All 60";
+        var selectedCategory = category.selection ? category.selection.text : "Semua 60";
         var query = String(search.text || "").toLowerCase();
         list.removeAll();
         var first = null;
         var i;
         for (i = 0; i < PRESETS.length; i++) {
             var preset = PRESETS[i];
-            if (selectedCategory !== "All 60" && preset.category !== selectedCategory) continue;
+            if (selectedCategory !== "Semua 60" && preset.category !== selectedCategory) continue;
             if (query && preset.name.toLowerCase().indexOf(query) < 0 && preset.category.toLowerCase().indexOf(query) < 0) continue;
             var item = list.add("item", preset.name);
             item.presetIndex = i;
@@ -141,13 +267,16 @@
             showDetail();
         } else {
             detail.text = "Tidak ada preset yang cocok dengan filter ini.";
+            redrawPreview();
         }
     }
 
     function showDetail() {
-        if (!list.selection) return;
-        var p = PRESETS[list.selection.presetIndex];
-        detail.text = p.category + "  ·  Entrance dengan easing halus";
+        var p = getSelectedPreset();
+        if (!p) return;
+        detail.text = p.wordDrop ? "Animasi per kata: tiap kata turun satu per satu, dengan fade lembut." : p.category + "  ·  Entrance dengan easing halus.";
+        previewProgress.value = 55;
+        redrawPreview();
     }
 
     function getDuration() {
@@ -258,6 +387,68 @@
         return changed;
     }
 
+    function propertyAny(group, aliases) {
+        var i, found;
+        if (!group) return null;
+        for (i = 0; i < aliases.length; i++) {
+            try { found = group.property(aliases[i]); } catch (e) { found = null; }
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function addPropertyAny(group, aliases) {
+        var i, found;
+        for (i = 0; i < aliases.length; i++) {
+            try { found = group.addProperty(aliases[i]); } catch (e) { found = null; }
+            if (found) return found;
+        }
+        return null;
+    }
+
+    function animateWordDrop(layer, startTime, duration) {
+        var textProps = transformProperty(layer, "ADBE Text Properties");
+        var animators = propertyAny(textProps, ["ADBE Text Animators", "Text Animators"]);
+        if (!animators) return false;
+        var animator = null;
+        try {
+            animator = animators.addProperty("ADBE Text Animator");
+            if (!animator) return false;
+            var animatorProps = propertyAny(animator, ["ADBE Text Animator Properties", "Properties"]);
+            var selectors = propertyAny(animator, ["ADBE Text Selectors", "Selectors"]);
+            if (!animatorProps || !selectors) throw new Error("Text Animator groups are unavailable");
+
+            var position = addPropertyAny(animatorProps, ["ADBE Text Position 3D", "position"]);
+            var opacity = addPropertyAny(animatorProps, ["ADBE Text Opacity", "opacity"]);
+            if (!position || !opacity) throw new Error("Text Position/Opacity animator properties are unavailable");
+            position.setValue([0, -64, 0]);
+            opacity.setValue(0);
+
+            // A scripted text animator may ship with a default range selector.
+            // Reuse it when present to avoid stacking a second, full-range selector.
+            var selector = selectors.numProperties > 0 ? selectors.property(1) : addPropertyAny(selectors, ["ADBE Text Selector", "range"]);
+            if (!selector) throw new Error("Range selector is unavailable");
+            var advanced = propertyAny(selector, ["advanced", "ADBE Text Range Advanced"]);
+            var basedOn = propertyAny(advanced, ["basedOn", "ADBE Text Range Type2"]);
+            var start = propertyAny(selector, ["start", "ADBE Text Percent Start"]);
+            var end = propertyAny(selector, ["end", "ADBE Text Percent End"]);
+            var offset = propertyAny(selector, ["offset", "ADBE Text Percent Offset"]);
+            if (!basedOn || !start || !end) throw new Error("Word-based range selector is unavailable");
+            basedOn.setValue(3); // Words
+            end.setValue(100);
+            if (offset) offset.setValue(0);
+            start.setValueAtTime(startTime, 0);
+            start.setValueAtTime(startTime + duration, 100);
+            keyEase(start, start.nearestKeyIndex(startTime));
+            keyEase(start, start.nearestKeyIndex(startTime + duration));
+            try { animator.name = "Text Animation Studio · Word Drop"; } catch (nameError) {}
+            return true;
+        } catch (e) {
+            try { if (animator) animator.remove(); } catch (removeError) {}
+            return false;
+        }
+    }
+
     function applyPreset() {
         if (!list.selection) {
             status.text = "Pilih salah satu preset terlebih dahulu.";
@@ -284,7 +475,8 @@
                 textProps = transformProperty(layer, "ADBE Text Properties");
                 if (!textProps) { skipped++; continue; }
                 try {
-                    if (animateLayer(layer, comp, preset, startTime, duration)) applied++;
+                    var didApply = preset.wordDrop ? animateWordDrop(layer, startTime, duration) : animateLayer(layer, comp, preset, startTime, duration);
+                    if (didApply) applied++;
                     else skipped++;
                 } catch (layerError) { skipped++; }
             }
@@ -294,7 +486,7 @@
         if (applied > 0) {
             status.text = "Preset “" + preset.name + "” diterapkan ke " + applied + " text layer." + (skipped ? " " + skipped + " layer non-teks/tidak didukung dilewati." : "") + " Undo: Ctrl/Cmd+Z.";
         } else {
-            status.text = "Tidak ada text layer yang berhasil dianimasikan. Periksa apakah properti transform memiliki expression.";
+            status.text = preset.wordDrop ? "Word-by-Word Drop gagal diterapkan. Pastikan EffectCraft mendukung Text Animator dan range selector berbasis kata." : "Tidak ada text layer yang berhasil dianimasikan. Periksa pilihan layer dan expression pada properti transform.";
         }
     }
 
