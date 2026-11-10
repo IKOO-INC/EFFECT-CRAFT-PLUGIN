@@ -54,8 +54,12 @@ Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · 
 
 ## 5. Apple Card Layout Studio
 
-Pembuat layout kartu otomatis dengan enam template UI yang dirapikan mengikuti referensi: Notification / Lock Screen, Settings / Dark UI, Widget / Dashboard, Media Player, App Store Feature, dan Message Thread. Gunakan tema Light/Dark/Vibrant, jumlah 1–6 kartu, susunan kipas atau grid (grid menjadi default), lalu masukkan judul, isi, dan label—satu kartu per baris. Komponen memakai spacing dan radius konsisten, hierarki teks yang lebih jelas, panel lembut, hairline divider, serta elemen UI native seperti status bar, notification row, settings list, widget chart, dan playback controls.
+Pembuat layout kartu otomatis dengan **20 template berbeda**: Notification / Lock Screen, Settings / Dark UI, Widget / Dashboard, Media Player, App Store Feature, Message Thread, Liquid Glass Control Center, Tab Bar, Toolbar, Segmented Control, Live Activity / Dynamic Island, Spotlight Search, Sidebar Navigation, App Icon Grid, Weather Widget, Finance / Stocks, Smart Stack, Notification Stack, Focus Tile, dan Calendar Event. Gunakan tema Light/Dark/Vibrant, jumlah 1–6 kartu, susunan kipas atau grid (grid menjadi default dan responsif terhadap orientasi comp), lalu masukkan judul, isi, dan label—satu kartu per baris. Desain memakai hierarki teks, spacing, radius, dan hairline divider yang konsisten.
+
+Template Liquid Glass ditujukan untuk kontrol/navigation yang mengambang di atas konten, dengan shape transparan yang menunjukkan background comp melalui permukaannya. Ini adalah **aproksimasi visual editable** menggunakan opacity dan highlight shape—bukan blur/refraction native atau implementasi Liquid Glass Apple. Untuk menjaga keterbacaan, gunakan di atas footage/background yang sesuai dan tidak menumpuk terlalu banyak material sekaligus.
 
 Setiap kartu dibuat sebagai precomposition berisi shape vector dan text layer asli yang tetap editable. Di composition utama, kartu-kartu tersusun otomatis dan terpilih setelah dibuat. Double-click precomp untuk mengganti teks, warna, shape, atau elemen lain. Pilih precomp kartu tersebut lalu gunakan Apple Card Motion Studio untuk menerapkan animasi entrance. Semua pembuatan bisa di-undo sebagai satu langkah.
+
+Acuan desain: [Apple HIG — Materials & Liquid Glass](https://developer.apple.com/design/human-interface-guidelines/materials) · [Tab Bars](https://developer.apple.com/design/human-interface-guidelines/tab-bars) · [Sidebars](https://developer.apple.com/design/human-interface-guidelines/sidebars).
 
 Berkas: [`Apple Card Layout Studio.jsx`](./Apple%20Card%20Layout%20Studio.jsx)

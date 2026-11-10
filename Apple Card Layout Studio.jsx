@@ -5,9 +5,6 @@
 */
 (function (thisObj) {
     var TITLE = "Apple Card Layout Studio";
-    var ACCENTS = [[0.0, 0.48, 0.98], [0.98, 0.26, 0.38], [0.67, 0.36, 0.95], [0.12, 0.66, 0.53], [1.0, 0.55, 0.18], [0.10, 0.68, 0.84]];
-    var WHITE = [0.98, 0.98, 0.99];
-    var DARK = [0.055, 0.06, 0.075];
 
     var ui = (thisObj instanceof Panel) ? thisObj : new Window("palette", TITLE, undefined, { resizeable: true });
     ui.orientation = "column";
@@ -21,7 +18,7 @@
     header.alignChildren = ["fill", "top"];
     header.spacing = 3;
     header.margins = 9;
-    header.add("statictext", undefined, "Rakit layout kartu editable langsung di composition");
+    header.add("statictext", undefined, "20 template UI editable · termasuk Liquid Glass-inspired");
     header.add("statictext", undefined, "Teks hidup · shape vector · tiap kartu bisa diedit terpisah");
 
     var design = ui.add("panel", undefined, "PILIH DESAIN");
@@ -39,7 +36,7 @@
         list.alignment = ["fill", "center"];
         return list;
     }
-    var cardType = dropdownRow(design, "Template", ["Notification / Lock Screen", "Settings / Dark UI", "Widget / Dashboard", "Media Player", "App Store Feature", "Message Thread"], 0);
+    var cardType = dropdownRow(design, "Template", ["Notification / Lock Screen", "Settings / Dark UI", "Widget / Dashboard", "Media Player", "App Store Feature", "Message Thread", "Liquid Glass / Control Center", "Liquid Glass / Tab Bar", "Liquid Glass / Toolbar", "Liquid Glass / Segmented", "Live Activity / Dynamic Island", "Spotlight / Search", "Sidebar / Navigation", "App Icon Grid", "Weather / Widget", "Finance / Stocks", "Smart Stack / Widgets", "Notification Stack", "Focus / Control Tile", "Calendar / Event"], 6);
     var layoutType = dropdownRow(design, "Susunan", ["Kartu kipas bertumpuk", "Grid rapi"], 1);
     var themeType = dropdownRow(design, "Tema", ["Light", "Dark", "Vibrant"], 0);
     var countType = dropdownRow(design, "Jumlah kartu", ["1", "2", "3", "4", "5", "6"], 4);
@@ -91,7 +88,7 @@
         return result;
     }
     function colorCopy(color) { return [color[0], color[1], color[2]]; }
-    function shapeRect(comp, name, x, y, w, h, radius, color) {
+    function shapeRect(comp, name, x, y, w, h, radius, color, opacity) {
         var layer = comp.layers.addShape();
         layer.name = name;
         var root = layer.property("ADBE Root Vectors Group");
@@ -103,7 +100,11 @@
         rect.property("ADBE Vector Rect Roundness").setValue(radius);
         var fill = contents.addProperty("ADBE Vector Graphic - Fill");
         fill.property("ADBE Vector Fill Color").setValue(colorCopy(color));
-        layer.property("ADBE Transform Group").property("ADBE Position").setValue([x, y]);
+        var transform = layer.property("ADBE Transform Group");
+        transform.property("ADBE Position").setValue([x, y]);
+        if (typeof opacity === "number") {
+            try { transform.property("ADBE Opacity").setValue(opacity); } catch (eOpacity) {}
+        }
         return layer;
     }
     function addText(comp, name, text, x, y, size, color, centered) {
@@ -120,8 +121,8 @@
         layer.property("ADBE Transform Group").property("ADBE Position").setValue([x, y]);
         return layer;
     }
-    function addCircle(comp, name, cx, cy, diameter, color) {
-        return shapeRect(comp, name, cx, cy, diameter, diameter, diameter / 2, color);
+    function addCircle(comp, name, cx, cy, diameter, color, opacity) {
+        return shapeRect(comp, name, cx, cy, diameter, diameter, diameter / 2, color, opacity);
     }
     function themeColors(theme, index) {
         var accents = [[0.0, 0.48, 0.98], [0.96, 0.23, 0.34], [0.62, 0.32, 0.91], [0.08, 0.61, 0.47], [1.0, 0.56, 0.12], [0.06, 0.62, 0.82]];
@@ -136,6 +137,8 @@
         var safeName = title.replace(/[\\\/:*?"<>|]/g, " ").substring(0, 26);
         var cardComp = app.project.items.addComp("Card " + (index + 1) + " — " + safeName, width, height, parentComp.pixelAspect || 1, duration, fps);
         var col = themeColors(theme, index);
+        var liquidGlass = type.indexOf("Liquid Glass /") === 0;
+        var transparentOverlay = liquidGlass || type.indexOf("Live Activity /") === 0;
         cardComp.bgColor = colorCopy(col.bg);
         var pad = Math.round(width * 0.075);
         var titleSize = Math.max(23, Math.round(width * 0.073));
@@ -146,17 +149,26 @@
         var body = wrapText(detail, maxBody);
         var titleText = wrapText(title, Math.max(12, Math.floor((width - 2 * pad) / (titleSize * 0.55))));
 
-        // Quiet iOS-like canvas with a subtle keyline: consistent radius, spacing and typography.
-        shapeRect(cardComp, "Card Keyline", cx, cy, width - 2, height - 2, Math.round(width * 0.065), col.line);
-        shapeRect(cardComp, "Card Surface", cx, cy, width - 4, height - 4, Math.round(width * 0.062), col.bg);
+        // Opaque content cards use a quiet keyline. Glass/control overlays stay transparent
+        // so the footage or composition background remains visible beneath their surfaces.
+        if (!transparentOverlay) {
+            shapeRect(cardComp, "Card Keyline", cx, cy, width - 2, height - 2, Math.round(width * 0.065), col.line);
+            shapeRect(cardComp, "Card Surface", cx, cy, width - 4, height - 4, Math.round(width * 0.062), col.bg);
+        }
 
         function txt(name, value, x, y, size, color, center) {
             return addText(cardComp, name + " — editable", value, x, y, size, color, !!center);
         }
-        function rect(name, x, y, w, h, radius, color) {
-            return shapeRect(cardComp, name, x, y, w, h, radius, color);
+        function rect(name, x, y, w, h, radius, color, opacity) {
+            return shapeRect(cardComp, name, x, y, w, h, radius, color, opacity);
         }
-        function circle(name, x, y, d, color) { return addCircle(cardComp, name, x, y, d, color); }
+        function circle(name, x, y, d, color, opacity) { return addCircle(cardComp, name, x, y, d, color, opacity); }
+        function glassPanel(name, x, y, w, h) {
+            var glassTint = theme === "Dark" ? [0.20, 0.24, 0.32] : [0.90, 0.94, 1.0];
+            rect(name + " rim", x, y, w, h, Math.min(w, h) * 0.15, [1, 1, 1], 42);
+            rect(name + " material", x, y, w - 4, h - 4, Math.min(w, h) * 0.14, glassTint, theme === "Dark" ? 72 : 60);
+            rect(name + " top sheen", x, y - h * 0.39, w * 0.84, h * 0.08, h * 0.04, [1, 1, 1], 24);
+        }
         function statusBar() {
             txt("Status time", "9:41", pad, height * 0.105, smallSize, col.fg, false);
             txt("Status indicators", "LTE  100%", width - pad - width * 0.23, height * 0.105, smallSize, col.muted, false);
@@ -229,7 +241,173 @@
             txt("App description", body, pad, height * 0.78, bodySize, col.muted, false);
             rect("Get button", width - pad - width * 0.18, height * 0.90, width * 0.17, height * 0.09, height * 0.045, col.tint);
             txt("Get button label", "GET", width - pad - width * 0.145, height * 0.915, smallSize, col.accent, false);
-        } else {
+        } else if (type === "Liquid Glass / Control Center") {
+            statusBar();
+            txt("Control Center title", titleText, pad, height * 0.23, titleSize * 0.88, col.fg, false);
+            txt("Control Center subtitle", label.toUpperCase(), pad, height * 0.29, smallSize, col.muted, false);
+            glassPanel("Control Center glass", cx, height * 0.62, width * 0.92, height * 0.66);
+            var controlNames = ["Airplane", "Wi-Fi", "Bluetooth", "Focus"];
+            var controlMarks = ["A", "W", "B", "F"];
+            var controlColors = [[1.0, 0.58, 0.14], [0.12, 0.52, 0.98], [0.12, 0.52, 0.98], [0.48, 0.50, 0.57]];
+            var ci;
+            for (ci = 0; ci < 4; ci++) {
+                var ccx = cx + (ci % 2 === 0 ? -width * 0.22 : width * 0.22);
+                var ccy = height * (ci < 2 ? 0.43 : 0.64);
+                rect("Glass control tile " + ci, ccx, ccy, width * 0.40, height * 0.18, width * 0.07, col.surface, theme === "Dark" ? 74 : 68);
+                circle("Glass control icon " + ci, ccx - width * 0.13, ccy - height * 0.025, width * 0.075, controlColors[ci]);
+                txt("Glass control glyph " + ci, controlMarks[ci], ccx - width * 0.145, ccy - height * 0.013, smallSize, [1, 1, 1], false);
+                txt("Glass control label " + ci, controlNames[ci], ccx - width * 0.16, ccy + height * 0.045, smallSize, col.fg, false);
+            }
+            rect("Brightness slider base", cx, height * 0.80, width * 0.80, height * 0.075, height * 0.037, col.surface, 76);
+            rect("Brightness slider fill", cx - width * 0.12, height * 0.80, width * 0.56, height * 0.067, height * 0.033, [1, 1, 1], 80);
+            rect("Volume slider base", cx, height * 0.90, width * 0.80, height * 0.075, height * 0.037, col.surface, 76);
+            rect("Volume slider fill", cx + width * 0.08, height * 0.90, width * 0.40, height * 0.067, height * 0.033, col.accent, 88);
+        } else if (type === "Liquid Glass / Tab Bar") {
+            txt("Tab bar screen title", titleText, pad, height * 0.31, titleSize, col.fg, false);
+            txt("Tab bar screen detail", body, pad, height * 0.41, bodySize, col.muted, false);
+            glassPanel("Floating Liquid Glass tab bar", cx, height * 0.82, width * 0.92, height * 0.20);
+            var tabNames = ["Today", "Games", "Apps", "Arcade"], tabMarks = ["T", "G", "A", "R"], ti;
+            for (ti = 0; ti < 4; ti++) {
+                var tx = width * (0.16 + ti * 0.227);
+                if (ti === 0) rect("Selected tab capsule", tx, height * 0.82, width * 0.19, height * 0.16, height * 0.08, col.accent, 92);
+                txt("Tab glyph " + ti, tabMarks[ti], tx - width * 0.012, height * 0.795, smallSize + 1, ti === 0 ? [1, 1, 1] : col.fg, false);
+                txt("Tab label " + ti, tabNames[ti], tx - width * 0.035, height * 0.855, smallSize - 1, ti === 0 ? [1, 1, 1] : col.muted, false);
+            }
+        } else if (type === "Liquid Glass / Toolbar") {
+            glassPanel("Floating toolbar", cx, height * 0.20, width * 0.90, height * 0.14);
+            var toolMarks = ["<", "−", "+", "…"], tmi;
+            for (tmi = 0; tmi < 4; tmi++) {
+                var toolX = width * (0.19 + tmi * 0.205);
+                circle("Toolbar button " + tmi, toolX, height * 0.20, width * 0.09, col.surface, 76);
+                txt("Toolbar symbol " + tmi, toolMarks[tmi], toolX - width * 0.014, height * 0.218, bodySize, col.fg, false);
+            }
+            txt("Toolbar title", titleText, pad, height * 0.50, titleSize, col.fg, false);
+            txt("Toolbar details", body, pad, height * 0.62, bodySize, col.muted, false);
+            glassPanel("Floating accessory", cx, height * 0.83, width * 0.76, height * 0.16);
+            txt("Toolbar accessory label", label.toUpperCase(), pad + width * 0.06, height * 0.85, smallSize, col.accent, false);
+        } else if (type === "Liquid Glass / Segmented") {
+            txt("Segmented screen title", titleText, pad, height * 0.42, titleSize, col.fg, false);
+            txt("Segmented screen details", body, pad, height * 0.53, bodySize, col.muted, false);
+            glassPanel("Segmented glass control", cx, height * 0.73, width * 0.88, height * 0.18);
+            var segments = ["Today", "Apps", "Games"], segW = width * 0.27, segStart = cx - segW, sg;
+            rect("Selected segment", segStart + segW, height * 0.73, segW * 0.95, height * 0.145, height * 0.07, col.surface, 92);
+            for (sg = 0; sg < 3; sg++) txt("Segment " + sg, segments[sg], segStart + sg * segW - width * 0.04, height * 0.75, smallSize, sg === 1 ? col.fg : col.muted, true);
+        } else if (type === "Live Activity / Dynamic Island") {
+            statusBar();
+            rect("Dynamic Island capsule", cx, height * 0.36, width * 0.82, height * 0.25, height * 0.125, [0.015, 0.02, 0.03]);
+            circle("Live activity app badge", pad + width * 0.11, height * 0.36, width * 0.13, col.accent);
+            txt("Live activity badge mark", "A", pad + width * 0.085, height * 0.38, bodySize, [1, 1, 1], false);
+            txt("Live activity title", titleText, pad + width * 0.23, height * 0.34, bodySize, [1, 1, 1], false);
+            txt("Live activity status", body, pad + width * 0.23, height * 0.43, smallSize, [0.78, 0.81, 0.86], false);
+            txt("Live activity timer", label, width - pad - width * 0.15, height * 0.37, smallSize, [0.25, 0.85, 0.52], false);
+            rect("Live activity progress base", cx, height * 0.76, width * 0.76, height * 0.025, height * 0.012, col.line, 90);
+            rect("Live activity progress", pad + width * 0.23, height * 0.76, width * 0.30, height * 0.02, height * 0.01, col.accent, 100);
+            txt("Live activity footer", "LIVE  ·  UPDATED JUST NOW", pad, height * 0.87, smallSize, col.muted, false);
+        } else if (type === "Spotlight / Search") {
+            statusBar();
+            rect("Spotlight search field", cx, height * 0.25, width - pad * 2, height * 0.12, height * 0.06, col.surface);
+            circle("Search icon", pad + width * 0.065, height * 0.25, width * 0.055, col.muted);
+            txt("Search prompt", title, pad + width * 0.12, height * 0.27, bodySize, col.muted, false);
+            txt("Search section heading", "SUGGESTIONS", pad, height * 0.43, smallSize, col.muted, false);
+            var resultNames = [title, "Recent item", "Browse collection"], resultMarks = ["A", "R", "B"], ri;
+            for (ri = 0; ri < 3; ri++) {
+                var rY = height * (0.54 + ri * 0.13);
+                if (ri > 0) divider(rY - height * 0.065);
+                rect("Search result icon " + ri, pad + width * 0.05, rY, width * 0.085, width * 0.085, width * 0.022, ri === 0 ? col.accent : col.tint);
+                txt("Search result symbol " + ri, resultMarks[ri], pad + width * 0.035, rY + height * 0.012, smallSize, ri === 0 ? [1, 1, 1] : col.accent, false);
+                txt("Search result title " + ri, resultNames[ri], pad + width * 0.12, rY + height * 0.01, bodySize, col.fg, false);
+                txt("Search result subtitle " + ri, ri === 0 ? body : "Open suggestion", pad + width * 0.12, rY + height * 0.06, smallSize, col.muted, false);
+            }
+        } else if (type === "Sidebar / Navigation") {
+            rect("Sidebar pane", width * 0.25, cy, width * 0.45, height - pad * 1.2, Math.round(width * 0.045), col.surface);
+            txt("Sidebar section", label.toUpperCase(), pad * 0.65, height * 0.20, smallSize, col.muted, false);
+            var sideNames = [title, "Favorites", "Recently Added", "Downloads"], sideMarks = ["A", "F", "R", "D"], sbi;
+            for (sbi = 0; sbi < 4; sbi++) {
+                var sy = height * (0.32 + sbi * 0.12);
+                if (sbi === 0) rect("Sidebar selected row", width * 0.25, sy, width * 0.40, height * 0.085, height * 0.04, col.tint);
+                txt("Sidebar icon " + sbi, sideMarks[sbi], pad * 0.72, sy + height * 0.02, smallSize, sbi === 0 ? col.accent : col.muted, false);
+                txt("Sidebar row " + sbi, sbi === 0 ? titleText : sideNames[sbi], pad * 1.65, sy + height * 0.02, smallSize, col.fg, false);
+            }
+            txt("Sidebar detail title", titleText, width * 0.53, height * 0.38, titleSize * 0.88, col.fg, false);
+            txt("Sidebar detail body", body, width * 0.53, height * 0.49, bodySize, col.muted, false);
+            rect("Sidebar content preview", width * 0.74, height * 0.72, width * 0.39, height * 0.28, Math.round(width * 0.035), col.tint);
+            txt("Sidebar content label", "COLLECTION", width * 0.60, height * 0.89, smallSize, col.accent, false);
+        } else if (type === "App Icon Grid") {
+            txt("App library title", titleText, pad, height * 0.20, titleSize, col.fg, false);
+            txt("App library category", label.toUpperCase(), pad, height * 0.27, smallSize, col.muted, false);
+            var appNames = ["Camera", "Photos", "Music", "Maps", "Weather", "Notes"], appMarks = ["C", "P", "M", "M", "W", "N"], appColors = [[0.13, 0.14, 0.16], [0.98, 0.31, 0.43], [0.96, 0.21, 0.52], [0.15, 0.65, 0.96], [0.22, 0.58, 0.95], [1.0, 0.79, 0.2]], ai;
+            for (ai = 0; ai < 6; ai++) {
+                var ax = width * (0.27 + (ai % 3) * 0.23), ay = height * (0.48 + Math.floor(ai / 3) * 0.28);
+                rect("App icon " + ai, ax, ay, width * 0.16, width * 0.16, width * 0.04, appColors[ai]);
+                txt("App icon glyph " + ai, appMarks[ai], ax - width * 0.025, ay + height * 0.02, titleSize * 0.72, [1, 1, 1], false);
+                txt("App icon label " + ai, ai === 0 ? title : appNames[ai], ax - width * 0.04, ay + height * 0.13, smallSize, col.fg, false);
+            }
+            txt("App library footer", body, pad, height * 0.94, smallSize, col.muted, false);
+        } else if (type === "Weather / Widget") {
+            txt("Weather location", titleText, pad, height * 0.19, bodySize, col.fg, false);
+            txt("Weather condition", body, pad, height * 0.27, smallSize, col.muted, false);
+            circle("Weather sun outer", width - pad - width * 0.17, height * 0.36, width * 0.25, [1.0, 0.72, 0.22]);
+            circle("Weather sun glow", width - pad - width * 0.17, height * 0.36, width * 0.17, [1.0, 0.84, 0.37]);
+            txt("Temperature", "18°", pad, height * 0.54, Math.round(width * 0.20), col.fg, false);
+            txt("Weather summary", label, pad, height * 0.63, bodySize, col.muted, false);
+            divider(height * 0.70);
+            var forecast = ["MON", "TUE", "WED", "THU"], temps = ["16°", "18°", "17°", "20°"], wi;
+            for (wi = 0; wi < 4; wi++) {
+                var wx = width * (0.18 + wi * 0.22);
+                txt("Forecast day " + wi, forecast[wi], wx, height * 0.79, smallSize, col.muted, false);
+                circle("Forecast icon " + wi, wx + width * 0.025, height * 0.84, width * 0.045, wi === 2 ? col.tint : [1.0, 0.72, 0.22]);
+                txt("Forecast temp " + wi, temps[wi], wx, height * 0.94, smallSize, col.fg, false);
+            }
+        } else if (type === "Finance / Stocks") {
+            txt("Finance ticker", label.toUpperCase(), pad, height * 0.19, smallSize, col.muted, false);
+            txt("Finance company", titleText, pad, height * 0.31, bodySize, col.fg, false);
+            txt("Stock value", "18,421", pad, height * 0.52, Math.round(width * 0.15), col.fg, false);
+            txt("Stock change", "+2.46%  Today", pad, height * 0.60, smallSize, [0.13, 0.72, 0.42], false);
+            var chartX = pad, chartY = height * 0.89, chartW = width - pad * 2, stockBars = [0.13, 0.20, 0.17, 0.27, 0.23, 0.34, 0.29, 0.40, 0.32, 0.47, 0.43, 0.54], stockGap = chartW * 0.035, stockW = (chartW - stockGap * 11) / 12, fi;
+            for (fi = 0; fi < stockBars.length; fi++) rect("Stock chart bar " + fi, chartX + stockW * 0.5 + fi * (stockW + stockGap), chartY - height * stockBars[fi] * 0.48, stockW, height * stockBars[fi] * 0.48, stockW * 0.45, fi > 8 ? [0.13, 0.72, 0.42] : col.tint);
+            txt("Finance range label", "1D     1W     1M     1Y", pad, height * 0.95, smallSize, col.muted, false);
+        } else if (type === "Smart Stack / Widgets") {
+            rect("Stack card back 2", cx + width * 0.045, height * 0.64, width * 0.84, height * 0.48, Math.round(width * 0.05), col.line);
+            rect("Stack card back 1", cx + width * 0.02, height * 0.59, width * 0.88, height * 0.50, Math.round(width * 0.05), col.tint);
+            rect("Stack top widget", cx, height * 0.50, width * 0.92, height * 0.52, Math.round(width * 0.05), col.surface);
+            txt("Stack widget label", label.toUpperCase(), pad, height * 0.32, smallSize, col.accent, false);
+            txt("Stack widget title", titleText, pad, height * 0.49, titleSize, col.fg, false);
+            txt("Stack widget detail", body, pad, height * 0.60, bodySize, col.muted, false);
+            rect("Stack widget action", pad + width * 0.11, height * 0.79, width * 0.70, height * 0.09, height * 0.045, col.tint);
+            txt("Stack widget action label", "OPEN WIDGET", pad + width * 0.23, height * 0.81, smallSize, col.accent, false);
+        } else if (type === "Notification Stack") {
+            txt("Notification center title", titleText, pad, height * 0.21, titleSize * 0.9, col.fg, false);
+            txt("Notification center date", label.toUpperCase(), pad, height * 0.28, smallSize, col.muted, false);
+            var notiTitles = [title, "A new update is ready", "Your daily summary"], notiBodies = [detail, "Tap to see what changed.", "You have 3 items to review."], ni;
+            for (ni = 0; ni < 3; ni++) {
+                var ny = height * (0.43 + ni * 0.18);
+                rect("Notification card " + ni, cx, ny, width - pad * 2, height * 0.155, Math.round(width * 0.035), col.surface);
+                circle("Notification icon " + ni, pad + width * 0.065, ny - height * 0.025, width * 0.06, ni === 0 ? col.accent : col.tint);
+                txt("Notification icon mark " + ni, "A", pad + width * 0.055, ny - height * 0.013, smallSize, ni === 0 ? [1, 1, 1] : col.accent, false);
+                txt("Notification row title " + ni, notiTitles[ni], pad + width * 0.12, ny - height * 0.04, smallSize + 1, col.fg, false);
+                txt("Notification row detail " + ni, wrapText(notiBodies[ni], 32), pad + width * 0.12, ny + height * 0.025, smallSize, col.muted, false);
+            }
+        } else if (type === "Focus / Control Tile") {
+            statusBar();
+            glassPanel("Focus glass tile", cx, height * 0.56, width * 0.91, height * 0.66);
+            circle("Focus icon disc", pad + width * 0.12, height * 0.36, width * 0.18, [0.45, 0.39, 0.83]);
+            txt("Focus icon", "F", pad + width * 0.095, height * 0.385, titleSize * 0.72, [1, 1, 1], false);
+            txt("Focus title", titleText, pad, height * 0.56, titleSize, col.fg, false);
+            txt("Focus status", body, pad, height * 0.66, bodySize, col.muted, false);
+            rect("Focus active pill", pad + width * 0.16, height * 0.83, width * 0.70, height * 0.12, height * 0.06, col.accent, 94);
+            txt("Focus active label", "FOCUS ON", pad + width * 0.32, height * 0.85, smallSize, [1, 1, 1], false);
+        } else if (type === "Calendar / Event") {
+            statusBar();
+            txt("Calendar month", label.toUpperCase(), pad, height * 0.25, smallSize, col.accent, false);
+            txt("Calendar date", "10", pad, height * 0.46, Math.round(width * 0.18), col.fg, false);
+            txt("Calendar event title", titleText, pad + width * 0.29, height * 0.40, bodySize + 2, col.fg, false);
+            txt("Calendar event details", body, pad + width * 0.29, height * 0.50, smallSize, col.muted, false);
+            divider(height * 0.61);
+            rect("Event timeline accent", pad + width * 0.04, height * 0.77, width * 0.012, height * 0.25, width * 0.006, col.accent);
+            txt("Event start time", "10:00", pad + width * 0.11, height * 0.70, smallSize, col.muted, false);
+            txt("Event name", titleText, pad + width * 0.23, height * 0.70, bodySize, col.fg, false);
+            txt("Event venue", "Today  ·  Calendar", pad + width * 0.23, height * 0.79, smallSize, col.muted, false);
+        } else if (type === "Message Thread") {
             statusBar();
             txt("Conversation name", titleText, pad, height * 0.28, titleSize * 0.86, col.fg, false);
             txt("Conversation status", label, pad, height * 0.36, smallSize, col.muted, false);
@@ -237,6 +415,9 @@
             txt("Incoming message", body, pad + width * 0.25, height * 0.55, bodySize, col.fg, false);
             rect("Outgoing message bubble", width - pad - width * 0.72, height * 0.82, width * 0.72, height * 0.18, Math.round(width * 0.045), col.accent);
             txt("Outgoing message", "Sounds good!", width - pad - width * 0.65, height * 0.81, bodySize, [1, 1, 1], false);
+        } else {
+            txt("Fallback title", titleText, pad, height * 0.4, titleSize, col.fg, false);
+            txt("Fallback body", body, pad, height * 0.56, bodySize, col.muted, false);
         }
         return cardComp;
     }
