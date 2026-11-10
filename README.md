@@ -41,14 +41,15 @@ Berkas utama: [`Motion FX Studio.jsx`](./Motion%20FX%20Studio.jsx)
 
 ## 4. Apple Card Motion Studio
 
-Panel `.jsx` dengan 12 preset gerak kartu Apple-inspired dalam empat kategori: Slide & Reveal, Scale & Settle, Stack & Cascade, dan Float & Tilt. Termasuk Clean Rise, Glide, Soft Pop, Card Cascade, Layered Stack, dan Fan In. Atur durasi, jeda stagger, serta urutan layer; preset membuat keyframe Position, Scale, Opacity, dan Rotation pada layer terpilih sehingga elemen bisa masuk bergantian.
+Panel `.jsx` dengan **30 preset animasi card** dalam enam kategori: Slide & Reveal, Scale & Settle, Stack & Cascade, Float & Tilt, Apple Signature, dan Exit / Dismiss. Ada entrance singkat, gerakan deck/cascade, serta tiga exit preset. Default durasi 0,32 detik (sekitar 10 frame di 30 fps) dengan easing halus; overshoot dibuat kecil dan opsional, bukan efek bounce terus-menerus. Atur durasi, jeda stagger, serta urutan layer. Animasi menggunakan keyframe Position, Scale, Opacity, dan Rotation 2D.
 
-Panel ini tidak mengganti atau meraster isi layer. Text layer tetap bisa diedit melalui source text, dan shape/artwork tetap bisa disunting seperti biasa. Untuk satu kartu yang tersusun dari beberapa layer dan harus bergerak serempak, pilih layer-layernya lalu set **Jarak stagger = 0** sebelum menerapkan preset; jika ingin beberapa kartu masuk bergantian, gunakan stagger di atas 0. Preset menganimasikan transform 2D, bukan rotasi 3D atau pembuatan kartu otomatis.
+Terinspirasi pengukuran Apple Motion skill: animated entry sekitar 8 frame median, dengan cut/slide/fade sebagai gerakan utama dan aksen yang jarang; serta Apple HIG Motion yang menyarankan gerak singkat, bertujuan, presisi, dan tidak mengganggu. Panel ini tidak mengganti atau meraster isi layer. Teks dan artwork tetap editable. Untuk beberapa layer dalam satu kartu yang harus bergerak serempak, set **Jarak stagger = 0**; gunakan stagger di atas 0 untuk masuk bergantian. Preset bekerja pada layer/precomp terpilih; bukan animasi 3D.
 
 ### Referensi inspirasi
 
 - [Apple Design skill](https://github.com/emilkowalski/skills/blob/main/skills/apple-design/SKILL.md): motion responsif dan natural, dengan spring serta overshoot secara hemat.
 - [Apple Motion skill](https://github.com/IskakovDamir/apple-motion/blob/main/skill/apple-motion/SKILL.md): entry singkat (sekitar 8 frame median), gerak slide/fade yang bersih, dan transisi aksen yang jarang. Preset ini menerjemahkan prinsip tersebut ke keyframe transform EffectCraft.
+- [Apple HIG — Motion](https://developer.apple.com/design/human-interface-guidelines/motion): gerak singkat, presisi, bertujuan, serta tidak berlebihan.
 
 Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · [`Curve Studio.jsx`](./Curve%20Studio.jsx) · [`Motion FX Studio.jsx`](./Motion%20FX%20Studio.jsx) · [`Apple Card Motion Studio.jsx`](./Apple%20Card%20Motion%20Studio.jsx)
 

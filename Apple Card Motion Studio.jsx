@@ -14,19 +14,44 @@
 
     // Apple-inspired motion: quick, controlled entries, restrained overshoot, clean settles.
     // Translation offsets are relative to comp dimensions; all presets settle at the original transform.
-    var C = "Slide & Reveal", P = "Scale & Settle", D = "Stack & Cascade", F = "Float & Tilt";
-    add(C, "01 · Clean Rise", "Naik halus · rapi", [[0, 0, 0.09, 0.985, 0, 0], [0.76, 0, -0.006, 1.008, 0.88, 0], END]);
-    add(C, "02 · Glide from Left", "Geser pendek dari kiri", [[0, -0.16, 0, 0.985, 0, 0], [0.78, 0.006, 0, 1.006, 0.9, 0], END]);
-    add(C, "03 · Glide from Right", "Geser pendek dari kanan", [[0, 0.16, 0, 0.985, 0, 0], [0.78, -0.006, 0, 1.006, 0.9, 0], END]);
+    var C = "Slide & Reveal", P = "Scale & Settle", D = "Stack & Cascade", F = "Float & Tilt", G = "Apple Signature", X = "Exit / Dismiss";
+    add(C, "01 · Clean Rise", "Naik halus · rapi", [[0, 0, 0.07, 0.99, 0, 0], [0.76, 0, -0.004, 1.006, 0.9, 0], END]);
+    add(C, "02 · Glide from Left", "Geser pendek dari kiri", [[0, -0.12, 0, 0.99, 0, 0], [0.78, 0.004, 0, 1.006, 0.9, 0], END]);
+    add(C, "03 · Glide from Right", "Geser pendek dari kanan", [[0, 0.12, 0, 0.99, 0, 0], [0.78, -0.004, 0, 1.006, 0.9, 0], END]);
     add(C, "04 · Soft Reveal", "Fade + naik sedikit", [[0, 0, 0.045, 1, 0, 0], [0.78, 0, 0, 1.008, 0.88, 0], END]);
-    add(P, "05 · Focus In", "Zoom masuk · tanpa hentakan", [[0, 0, 0, 0.82, 0, 0], [0.78, 0, 0, 1.012, 0.9, 0], END]);
-    add(P, "06 · Soft Pop", "Pop kecil · settle lembut", [[0, 0, 0, 0.88, 0, 0], [0.7, 0, 0, 1.035, 0.9, 0], [0.88, 0, 0, 0.996, 1, 0], END]);
-    add(P, "07 · Expand & Land", "Kartu membesar lalu mendarat", [[0, 0, 0.025, 1.12, 0, 0], [0.72, 0, 0, 0.988, 0.9, 0], END]);
+    add(P, "05 · Focus In", "Zoom masuk · tanpa hentakan", [[0, 0, 0, 0.9, 0, 0], [0.78, 0, 0, 1.008, 0.9, 0], END]);
+    add(P, "06 · Soft Pop", "Pop kecil · overshoot terkendali", [[0, 0, 0, 0.94, 0, 0], [0.7, 0, 0, 1.022, 0.9, 0], [0.88, 0, 0, 0.998, 1, 0], END]);
+    add(P, "07 · Expand & Land", "Kartu membesar tipis lalu settle", [[0, 0, 0.015, 1.06, 0, 0], [0.72, 0, 0, 0.994, 0.9, 0], END]);
     add(D, "08 · Card Cascade", "Kartu masuk berurutan", [[0, 0, 0.11, 0.94, 0, 0], [0.72, 0, -0.01, 1.018, 0.88, 0], [0.88, 0, 0.003, 0.997, 1, 0], END]);
-    add(D, "09 · Layered Stack", "Tumpukan kartu · masuk dari samping", [[0, 0.13, 0.035, 0.91, 0, 4], [0.72, -0.01, 0, 1.025, 0.9, -0.8], [0.9, 0, 0, 0.998, 1, 0], END]);
-    add(D, "10 · Fan In", "Kartu berputar ringan saat masuk", [[0, -0.1, 0.07, 0.9, 0, -8], [0.72, 0.008, -0.008, 1.025, 0.9, 1.2], [0.9, 0, 0, 0.998, 1, 0], END]);
+    add(D, "09 · Layered Stack", "Tumpukan kartu · masuk dari samping", [[0, 0.10, 0.025, 0.95, 0, 3], [0.72, -0.008, 0, 1.018, 0.9, -0.5], [0.9, 0, 0, 0.999, 1, 0], END]);
+    add(D, "10 · Fan In", "Kartu berputar ringan saat masuk", [[0, -0.08, 0.055, 0.94, 0, -4], [0.72, 0.006, -0.006, 1.018, 0.9, 0.8], [0.9, 0, 0, 0.999, 1, 0], END]);
     add(F, "11 · Airy Drift", "Melayang dari kanan", [[0, 0.055, 0.035, 0.97, 0, 2.5], [0.76, -0.004, 0, 1.01, 0.9, -0.3], END]);
-    add(F, "12 · Gentle Tilt", "Miring tipis lalu tegak", [[0, 0, 0.045, 0.96, 0, -6], [0.72, 0, 0, 1.015, 0.88, 1], [0.9, 0, 0, 0.998, 1, 0], END]);
+    add(F, "12 · Gentle Tilt", "Miring tipis lalu tegak", [[0, 0, 0.035, 0.98, 0, -3.5], [0.72, 0, 0, 1.012, 0.9, 0.6], [0.9, 0, 0, 0.999, 1, 0], END]);
+
+    // Short, restrained signatures: default duration is ~10 frames at 30 fps.
+    add(G, "13 · Quiet Arrival", "Angkat tipis · settle hampir tanpa overshoot", [[0, 0, 0.035, 0.99, 0, 0], [0.78, 0, -0.002, 1.004, 0.9, 0], END]);
+    add(G, "14 · Soft Focus", "Fade + zoom sangat lembut", [[0, 0, 0.012, 0.965, 0, 0], [0.76, 0, 0, 1.008, 0.9, 0], END]);
+    add(G, "15 · Precision Lift", "Naik pendek · berhenti bersih", [[0, 0, 0.055, 1, 0, 0], [0.82, 0, 0, 1.004, 0.92, 0], END]);
+    add(G, "16 · Airy Settle", "Drift diagonal · gerak ringan", [[0, -0.025, 0.02, 0.985, 0, 0], [0.8, 0.002, 0, 1.006, 0.9, 0], END]);
+    add(G, "17 · Minimal Slide", "Geser pendek · fade cepat", [[0, 0.04, 0, 1, 0, 0], [0.74, -0.002, 0, 1.004, 0.9, 0], END]);
+
+    add(C, "18 · Maskless Rise", "Kartu naik dari bawah · tanpa mask", [[0, 0, 0.075, 1, 0, 0], [0.76, 0, 0, 1.006, 0.9, 0], END]);
+    add(C, "19 · Short Cross-Slide", "Cross-slide kecil dari kiri", [[0, -0.095, 0, 0.99, 0, 0], [0.76, 0.003, 0, 1.006, 0.9, 0], END]);
+    add(C, "20 · Gentle Drift Down", "Turun pendek · fade-in halus", [[0, 0, -0.045, 0.99, 0, 0], [0.78, 0, 0.002, 1.005, 0.9, 0], END]);
+
+    add(P, "21 · Soft Zoom", "Scale 96% ke 100% · clean", [[0, 0, 0, 0.96, 0, 0], [0.78, 0, 0, 1.006, 0.9, 0], END]);
+    add(P, "22 · Focus Pull", "Sedikit out-of-focus feel lewat scale + opacity", [[0, 0, 0, 0.92, 0, 0], [0.74, 0, 0, 1.01, 0.92, 0], END]);
+    add(P, "23 · Scale Up to Place", "Muncul kecil · mendarat tanpa pop besar", [[0, 0, 0, 0.9, 0, 0], [0.76, 0, 0, 1.012, 0.92, 0], END]);
+
+    add(D, "24 · Fan Cascade", "Fan ringan · stagger cocok untuk deck", [[0, 0.065, 0.035, 0.975, 0, 2.5], [0.72, -0.004, 0, 1.014, 0.88, -0.4], [0.9, 0, 0, 1, 1, 0], END]);
+    add(D, "25 · Deck Reveal", "Kartu belakang ke depan · overlap halus", [[0, -0.07, 0.025, 0.96, 0, -2.5], [0.7, 0.006, 0, 1.018, 0.9, 0.5], [0.9, 0, 0, 1, 1, 0], END]);
+
+    add(F, "26 · Edge Tilt", "Tilt kecil · tegak kembali", [[0, 0.025, 0.025, 0.99, 0, 3], [0.75, -0.002, 0, 1.006, 0.9, -0.3], END]);
+    add(F, "27 · Hover Land", "Melayang turun sedikit ke posisi akhir", [[0, 0, -0.055, 0.985, 0, 0], [0.78, 0, 0.002, 1.006, 0.92, 0], END]);
+
+    add(X, "28 · Dismiss · Fade", "Keluar dengan fade singkat", [[0, 0, 0, 1, 1, 0], [0.68, 0, 0, 0.995, 0.52, 0], [1, 0, 0, 0.99, 0, 0]]);
+    add(X, "29 · Dismiss · Up", "Geser naik + fade", [[0, 0, 0, 1, 1, 0], [1, 0, -0.075, 0.985, 0, 0]]);
+    add(X, "30 · Dismiss · Left", "Keluar ke kiri · fade halus", [[0, 0, 0, 1, 1, 0], [0.82, -0.065, 0, 0.99, 0.25, 0], [1, -0.09, 0, 0.98, 0, 0]]);
 
     var ui = (thisObj instanceof Panel) ? thisObj : new Window("palette", TITLE, undefined, { resizeable: true });
     ui.orientation = "column";
@@ -40,7 +65,7 @@
     header.alignChildren = ["fill", "top"];
     header.spacing = 4;
     header.margins = 10;
-    header.add("statictext", undefined, "12 preset gerak kartu yang clean & fluid");
+    header.add("statictext", undefined, "30 motion preset Apple-inspired · entry & exit");
     header.add("statictext", undefined, "Teks dan artwork tetap editable · tanpa flatten / render ulang");
 
     var browse = ui.add("panel", undefined, "CARI PRESET");
@@ -52,13 +77,13 @@
     categoryRow.orientation = "row";
     categoryRow.alignChildren = ["left", "center"];
     categoryRow.add("statictext", undefined, "Kategori");
-    var category = categoryRow.add("dropdownlist", undefined, ["Semua 12", C, P, D, F]);
+    var category = categoryRow.add("dropdownlist", undefined, ["Semua 30", C, P, D, F, G, X]);
     category.selection = 0;
     category.alignment = ["fill", "center"];
     var search = browse.add("edittext", undefined, "");
     search.helpTip = "Cari nama atau jenis gerak kartu";
     search.minimumSize.height = 25;
-    var resultText = browse.add("statictext", undefined, "12 preset gerak kartu");
+    var resultText = browse.add("statictext", undefined, "30 preset gerak kartu");
 
     var catalog = ui.add("panel", undefined, "MOTION PRESETS");
     catalog.orientation = "column";
@@ -144,12 +169,12 @@
 
     var pageSize = 6, currentPage = 0, filtered = [];
     function refresh() {
-        var cat = category.selection ? category.selection.text : "Semua 12";
+        var cat = category.selection ? category.selection.text : "Semua 30";
         var q = String(search.text || "").toLowerCase();
         filtered = [];
         var i;
         for (i = 0; i < PRESETS.length; i++) {
-            if (cat !== "Semua 12" && PRESETS[i].category !== cat) continue;
+            if (cat !== "Semua 30" && PRESETS[i].category !== cat) continue;
             if (q && PRESETS[i].name.toLowerCase().indexOf(q) < 0 && PRESETS[i].description.toLowerCase().indexOf(q) < 0 && PRESETS[i].category.toLowerCase().indexOf(q) < 0) continue;
             filtered.push(i);
         }
