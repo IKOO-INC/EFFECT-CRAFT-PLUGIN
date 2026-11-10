@@ -39,8 +39,8 @@
         list.alignment = ["fill", "center"];
         return list;
     }
-    var cardType = dropdownRow(design, "Template", ["Message Bubble", "Calendar", "Profile", "Media Player", "Product Feature"], 0);
-    var layoutType = dropdownRow(design, "Susunan", ["Kartu kipas bertumpuk", "Grid rapi"], 0);
+    var cardType = dropdownRow(design, "Template", ["Notification / Lock Screen", "Settings / Dark UI", "Widget / Dashboard", "Media Player", "App Store Feature", "Message Thread"], 0);
+    var layoutType = dropdownRow(design, "Susunan", ["Kartu kipas bertumpuk", "Grid rapi"], 1);
     var themeType = dropdownRow(design, "Tema", ["Light", "Dark", "Vibrant"], 0);
     var countType = dropdownRow(design, "Jumlah kartu", ["1", "2", "3", "4", "5", "6"], 4);
 
@@ -124,60 +124,119 @@
         return shapeRect(comp, name, cx, cy, diameter, diameter, diameter / 2, color);
     }
     function themeColors(theme, index) {
-        var accent = colorCopy(ACCENTS[index % ACCENTS.length]);
-        if (theme === "Dark") return { bg: [0.105, 0.115, 0.14], fg: [0.97, 0.97, 0.99], muted: [0.68, 0.7, 0.75], accent: accent, soft: [0.19, 0.21, 0.25] };
-        if (theme === "Vibrant") return { bg: colorCopy(ACCENTS[index % ACCENTS.length]), fg: [1, 1, 1], muted: [0.93, 0.94, 0.98], accent: [0.99, 0.99, 1], soft: [0.13, 0.14, 0.19] };
-        return { bg: [0.965, 0.968, 0.978], fg: [0.08, 0.085, 0.11], muted: [0.39, 0.41, 0.46], accent: accent, soft: [0.91, 0.92, 0.94] };
+        var accents = [[0.0, 0.48, 0.98], [0.96, 0.23, 0.34], [0.62, 0.32, 0.91], [0.08, 0.61, 0.47], [1.0, 0.56, 0.12], [0.06, 0.62, 0.82]];
+        var accent = colorCopy(accents[index % accents.length]);
+        if (theme === "Dark") return { bg: [0.055, 0.065, 0.09], fg: [0.96, 0.97, 0.99], muted: [0.61, 0.65, 0.72], accent: [0.12, 0.55, 1.0], surface: [0.105, 0.12, 0.16], line: [0.18, 0.20, 0.25], tint: [0.14, 0.20, 0.29] };
+        if (theme === "Vibrant") return { bg: [0.965, 0.972, 0.99], fg: [0.08, 0.09, 0.13], muted: [0.39, 0.43, 0.50], accent: accent, surface: [1, 1, 1], line: [0.87, 0.89, 0.92], tint: [0.91, 0.94, 0.99] };
+        return { bg: [0.965, 0.968, 0.978], fg: [0.09, 0.095, 0.11], muted: [0.43, 0.44, 0.47], accent: [0.0, 0.43, 0.94], surface: [1, 1, 1], line: [0.87, 0.88, 0.90], tint: [0.93, 0.95, 0.98] };
     }
     function makeCardComp(parentComp, index, title, detail, label, type, theme, width, height) {
         var fps = parentComp.frameRate || 30;
         var duration = Math.max(parentComp.duration, 1);
         var safeName = title.replace(/[\\\/:*?"<>|]/g, " ").substring(0, 26);
         var cardComp = app.project.items.addComp("Card " + (index + 1) + " — " + safeName, width, height, parentComp.pixelAspect || 1, duration, fps);
-        cardComp.bgColor = colorCopy(themeColors(theme, index).bg);
         var col = themeColors(theme, index);
+        cardComp.bgColor = colorCopy(col.bg);
         var pad = Math.round(width * 0.075);
-        var titleSize = Math.max(24, Math.round(width * 0.085));
-        var bodySize = Math.max(16, Math.round(width * 0.046));
-        var labelSize = Math.max(12, Math.round(width * 0.032));
+        var titleSize = Math.max(23, Math.round(width * 0.073));
+        var bodySize = Math.max(15, Math.round(width * 0.041));
+        var smallSize = Math.max(11, Math.round(width * 0.029));
         var cx = width / 2, cy = height / 2;
-        var body = wrapText(detail, Math.max(15, Math.floor(width / (bodySize * 0.56))));
-        var titleText = wrapText(title, Math.max(12, Math.floor(width / (titleSize * 0.55))));
-        shapeRect(cardComp, "Card Background", cx, cy, width, height, Math.round(width * 0.075), col.bg);
+        var maxBody = Math.max(17, Math.floor((width - 2 * pad) / (bodySize * 0.56)));
+        var body = wrapText(detail, maxBody);
+        var titleText = wrapText(title, Math.max(12, Math.floor((width - 2 * pad) / (titleSize * 0.55))));
 
-        if (type === "Message Bubble") {
-            addText(cardComp, "Label — editable", label.toUpperCase(), pad, height * 0.19, labelSize, col.muted, false);
-            addText(cardComp, "Title — editable", titleText, pad, height * 0.34, titleSize, col.fg, false);
-            var bubbleW = width - pad * 2;
-            shapeRect(cardComp, "Message Bubble Shape", cx, height * 0.70, bubbleW, height * 0.32, Math.round(width * 0.055), col.accent);
-            addText(cardComp, "Message — editable", body, pad + width * 0.04, height * 0.66, bodySize, [1, 1, 1], false);
-        } else if (type === "Calendar") {
-            addText(cardComp, "Month / label — editable", label.toUpperCase(), pad, height * 0.19, labelSize, col.accent, false);
-            addText(cardComp, "Date — editable", titleText, pad, height * 0.39, titleSize, col.fg, false);
-            shapeRect(cardComp, "Calendar Accent", cx, height * 0.54, width * 0.83, Math.max(4, height * 0.012), 4, col.accent);
-            addText(cardComp, "Event details — editable", body, pad, height * 0.68, bodySize, col.muted, false);
-            addText(cardComp, "Calendar days", "S    M    T    W    T    F    S", pad, height * 0.87, labelSize, col.fg, false);
-        } else if (type === "Profile") {
-            addCircle(cardComp, "Profile Avatar", cx, height * 0.30, width * 0.25, col.accent);
-            var initials = title.replace(/[^A-Za-z0-9 ]/g, "").split(/\s+/), mark = "";
-            if (initials.length) mark += initials[0].charAt(0);
-            if (initials.length > 1) mark += initials[1].charAt(0);
-            addText(cardComp, "Avatar Initials — editable", mark.toUpperCase(), cx - width * 0.055, height * 0.33, Math.max(18, Math.round(width * 0.07)), [1, 1, 1], false);
-            addText(cardComp, "Profile Name — editable", titleText, pad, height * 0.60, titleSize, col.fg, true);
-            addText(cardComp, "Profile Bio — editable", body, pad, height * 0.77, bodySize, col.muted, true);
-            addText(cardComp, "Profile Tag — editable", label.toUpperCase(), pad, height * 0.91, labelSize, col.accent, true);
+        // Quiet iOS-like canvas with a subtle keyline: consistent radius, spacing and typography.
+        shapeRect(cardComp, "Card Keyline", cx, cy, width - 2, height - 2, Math.round(width * 0.065), col.line);
+        shapeRect(cardComp, "Card Surface", cx, cy, width - 4, height - 4, Math.round(width * 0.062), col.bg);
+
+        function txt(name, value, x, y, size, color, center) {
+            return addText(cardComp, name + " — editable", value, x, y, size, color, !!center);
+        }
+        function rect(name, x, y, w, h, radius, color) {
+            return shapeRect(cardComp, name, x, y, w, h, radius, color);
+        }
+        function circle(name, x, y, d, color) { return addCircle(cardComp, name, x, y, d, color); }
+        function statusBar() {
+            txt("Status time", "9:41", pad, height * 0.105, smallSize, col.fg, false);
+            txt("Status indicators", "LTE  100%", width - pad - width * 0.23, height * 0.105, smallSize, col.muted, false);
+        }
+        function divider(y) {
+            rect("Hairline divider", cx, y, width - pad * 2, Math.max(1, width * 0.002), 1, col.line);
+        }
+
+        if (type === "Notification / Lock Screen") {
+            statusBar();
+            rect("Dynamic Island", cx, height * 0.16, width * 0.25, height * 0.065, height * 0.032, [0.025, 0.03, 0.045]);
+            circle("Live Activity indicator", cx + width * 0.085, height * 0.16, width * 0.018, [0.20, 0.82, 0.43]);
+            txt("Lock screen label", label.toUpperCase(), pad, height * 0.245, smallSize, col.muted, false);
+            txt("Clock", "9:41", pad, height * 0.49, Math.round(width * 0.16), col.fg, false);
+            rect("Notification panel", cx, height * 0.73, width - pad * 1.25, height * 0.33, Math.round(width * 0.045), col.surface);
+            circle("Notification app icon", pad + width * 0.055, height * 0.64, width * 0.075, col.accent);
+            txt("Notification app mark", "A", pad + width * 0.043, height * 0.655, smallSize, [1, 1, 1], false);
+            txt("Notification heading", titleText, pad + width * 0.12, height * 0.68, bodySize + 2, col.fg, false);
+            txt("Notification detail", body, pad + width * 0.12, height * 0.77, smallSize + 1, col.muted, false);
+            rect("Notification highlight", pad + width * 0.035, height * 0.82, width * 0.012, height * 0.11, width * 0.006, col.accent);
+            txt("Notification footer", "Tap to view", pad + width * 0.075, height * 0.85, smallSize, col.accent, false);
+        } else if (type === "Settings / Dark UI") {
+            statusBar();
+            txt("Settings section", label.toUpperCase(), pad, height * 0.23, smallSize, col.muted, false);
+            txt("Settings heading", "Settings", pad, height * 0.37, titleSize + 3, col.fg, false);
+            rect("Settings group", cx, height * 0.70, width - pad * 2, height * 0.48, Math.round(width * 0.035), col.surface);
+            var rowTop = height * 0.55, rowGap = height * 0.145, rowNames = [title, "Wi-Fi", "Bluetooth"];
+            var rowDetails = [detail, "Connected", "On"];
+            var rowColors = [col.accent, [0.12, 0.67, 0.96], [0.28, 0.55, 0.96]];
+            var si;
+            for (si = 0; si < 3; si++) {
+                var ry = rowTop + si * rowGap;
+                if (si > 0) divider(ry - height * 0.055);
+                rect("Settings icon tile " + si, pad + width * 0.055, ry, width * 0.10, width * 0.10, width * 0.025, rowColors[si]);
+                txt("Settings icon letter " + si, si === 0 ? "A" : (si === 1 ? "W" : "B"), pad + width * 0.038, ry + height * 0.012, smallSize, [1, 1, 1], false);
+                txt("Settings row title " + si, rowNames[si], pad + width * 0.13, ry - height * 0.015, bodySize, col.fg, false);
+                txt("Settings row detail " + si, wrapText(rowDetails[si], 24), pad + width * 0.13, ry + height * 0.045, smallSize, col.muted, false);
+                if (si < 2) {
+                    rect("Settings toggle track " + si, width - pad - width * 0.085, ry + height * 0.018, width * 0.12, height * 0.062, height * 0.031, col.accent);
+                    circle("Settings toggle knob " + si, width - pad - width * 0.055, ry + height * 0.018, height * 0.052, [1, 1, 1]);
+                } else txt("Settings row chevron " + si, ">", width - pad - width * 0.07, ry + height * 0.015, bodySize, col.muted, false);
+            }
+        } else if (type === "Widget / Dashboard") {
+            txt("Widget label", label.toUpperCase(), pad, height * 0.19, smallSize, col.accent, false);
+            txt("Widget title", titleText, pad, height * 0.34, titleSize, col.fg, false);
+            txt("Widget summary", body, pad, height * 0.46, bodySize, col.muted, false);
+            divider(height * 0.58);
+            var barBase = height * 0.87, chartLeft = pad, chartWidth = width - pad * 2, bars = 7;
+            var barGap = chartWidth * 0.055, barWidth = (chartWidth - barGap * (bars - 1)) / bars;
+            var heights = [0.12, 0.19, 0.15, 0.27, 0.22, 0.34, 0.29];
+            var bi;
+            for (bi = 0; bi < bars; bi++) rect("Widget chart bar " + bi, chartLeft + barWidth * 0.5 + bi * (barWidth + barGap), barBase - height * heights[bi] / 2, barWidth, height * heights[bi], barWidth * 0.45, bi === bars - 2 ? col.accent : col.tint);
+            txt("Widget chart caption", "WEEKLY OVERVIEW", pad, height * 0.94, smallSize, col.muted, false);
         } else if (type === "Media Player") {
-            shapeRect(cardComp, "Album Art / editable color block", cx, height * 0.39, width * 0.82, height * 0.58, Math.round(width * 0.045), col.accent);
-            addCircle(cardComp, "Play Button", cx, height * 0.39, width * 0.18, [0.08, 0.09, 0.12]);
-            addText(cardComp, "Play Symbol", "▶", cx - width * 0.035, height * 0.415, Math.max(18, Math.round(width * 0.06)), [1, 1, 1], false);
-            addText(cardComp, "Track Title — editable", titleText, pad, height * 0.78, titleSize, col.fg, false);
-            addText(cardComp, "Track Info — editable", body + "\r" + label.toUpperCase(), pad, height * 0.90, bodySize, col.muted, false);
+            statusBar();
+            rect("Album artwork", cx, height * 0.39, width - pad * 2, height * 0.45, Math.round(width * 0.04), col.tint);
+            circle("Artwork disc", cx, height * 0.39, width * 0.24, col.accent);
+            circle("Artwork center", cx, height * 0.39, width * 0.075, col.surface);
+            txt("Album label", label.toUpperCase(), pad, height * 0.67, smallSize, col.muted, false);
+            txt("Track title", titleText, pad, height * 0.77, titleSize * 0.82, col.fg, false);
+            txt("Artist / details", body, pad, height * 0.86, bodySize, col.muted, false);
+            rect("Playback track", cx, height * 0.92, width - pad * 2, width * 0.012, width * 0.006, col.line);
+            rect("Playback progress", pad + width * 0.18, height * 0.92, width * 0.36, width * 0.012, width * 0.006, col.accent);
+        } else if (type === "App Store Feature") {
+            statusBar();
+            rect("App icon tile", pad + width * 0.13, height * 0.31, width * 0.24, width * 0.24, Math.round(width * 0.052), col.accent);
+            txt("App glyph", "A", pad + width * 0.10, height * 0.345, Math.round(width * 0.12), [1, 1, 1], false);
+            txt("App category", label.toUpperCase(), pad, height * 0.53, smallSize, col.accent, false);
+            txt("App name", titleText, pad, height * 0.66, titleSize * 0.88, col.fg, false);
+            txt("App description", body, pad, height * 0.78, bodySize, col.muted, false);
+            rect("Get button", width - pad - width * 0.18, height * 0.90, width * 0.17, height * 0.09, height * 0.045, col.tint);
+            txt("Get button label", "GET", width - pad - width * 0.145, height * 0.915, smallSize, col.accent, false);
         } else {
-            shapeRect(cardComp, "Feature Color Bar", cx, height * 0.16, width * 0.84, height * 0.025, Math.round(width * 0.012), col.accent);
-            addText(cardComp, "Feature Label — editable", label.toUpperCase(), pad, height * 0.32, labelSize, col.accent, false);
-            addText(cardComp, "Feature Headline — editable", titleText, pad, height * 0.53, titleSize, col.fg, false);
-            addText(cardComp, "Feature Description — editable", body, pad, height * 0.75, bodySize, col.muted, false);
-            addCircle(cardComp, "Feature Accent", width - pad * 1.25, height - pad * 1.25, width * 0.12, col.accent);
+            statusBar();
+            txt("Conversation name", titleText, pad, height * 0.28, titleSize * 0.86, col.fg, false);
+            txt("Conversation status", label, pad, height * 0.36, smallSize, col.muted, false);
+            rect("Incoming message bubble", pad + width * 0.20, height * 0.57, width * 0.72, height * 0.23, Math.round(width * 0.045), col.surface);
+            txt("Incoming message", body, pad + width * 0.25, height * 0.55, bodySize, col.fg, false);
+            rect("Outgoing message bubble", width - pad - width * 0.72, height * 0.82, width * 0.72, height * 0.18, Math.round(width * 0.045), col.accent);
+            txt("Outgoing message", "Sounds good!", width - pad - width * 0.65, height * 0.81, bodySize, [1, 1, 1], false);
         }
         return cardComp;
     }
@@ -205,7 +264,8 @@
                 scales.push(1 - Math.abs(offset) * 0.025);
             }
         } else {
-            var columns = count <= 4 ? 2 : 3;
+            var portraitComp = comp.height > comp.width;
+            var columns = portraitComp ? (count <= 3 ? 1 : 2) : (count <= 4 ? 2 : 3);
             var rows = Math.ceil(count / columns);
             width = Math.round(Math.min(comp.width / columns * 0.86, comp.height / rows * 0.88 / 0.90));
             width = Math.max(250, width);

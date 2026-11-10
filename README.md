@@ -54,7 +54,7 @@ Berkas utama: [`Text Animation Studio.jsx`](./Text%20Animation%20Studio.jsx) · 
 
 ## 5. Apple Card Layout Studio
 
-Pembuat layout kartu otomatis dengan lima template: Message Bubble, Calendar, Profile, Media Player, dan Product Feature. Pilih tema Light/Dark/Vibrant, jumlah 1–6 kartu, susunan kipas bertumpuk atau grid, lalu masukkan judul, isi, dan label—satu kartu per baris.
+Pembuat layout kartu otomatis dengan enam template UI yang dirapikan mengikuti referensi: Notification / Lock Screen, Settings / Dark UI, Widget / Dashboard, Media Player, App Store Feature, dan Message Thread. Gunakan tema Light/Dark/Vibrant, jumlah 1–6 kartu, susunan kipas atau grid (grid menjadi default), lalu masukkan judul, isi, dan label—satu kartu per baris. Komponen memakai spacing dan radius konsisten, hierarki teks yang lebih jelas, panel lembut, hairline divider, serta elemen UI native seperti status bar, notification row, settings list, widget chart, dan playback controls.
 
 Setiap kartu dibuat sebagai precomposition berisi shape vector dan text layer asli yang tetap editable. Di composition utama, kartu-kartu tersusun otomatis dan terpilih setelah dibuat. Double-click precomp untuk mengganti teks, warna, shape, atau elemen lain. Pilih precomp kartu tersebut lalu gunakan Apple Card Motion Studio untuk menerapkan animasi entrance. Semua pembuatan bisa di-undo sebagai satu langkah.
 
