@@ -34,7 +34,10 @@
                 catch (roundFillError) { g.fillRect(bg, 0, 0, w, h); }
                 try { g.drawRoundRect(glow, 0.5, 0.5, w - 1, h - 1, 10, 10); }
                 catch (roundBorderError) { g.drawRect(glow, 0.5, 0.5, w - 1, h - 1); }
-                g.drawLine(accent, 8, 14, 8, h - 14);
+                g.newPath();
+                g.moveTo(8, 14);
+                g.lineTo(8, h - 14);
+                g.strokePath(accent);
             } catch (e) {}
         };
     }
@@ -51,12 +54,13 @@
     graphCard.orientation = "column";
     graphCard.alignChildren = ["fill", "top"];
     graphCard.margins = 9;
-    var graph = graphCard.add("panel", undefined, "");
+    var graph = graphCard.add("group");
     graph.preferredSize = [320, 178];
     graph.minimumSize.height = 150;
 
     var values = { outInfluence: 33, outSpeed: 1.00, inInfluence: 33, inSpeed: 1.00 };
     var presetCards = [];
+    var loadingPreset = false;
 
     function curvePoint(t) {
         var x1 = values.outInfluence / 100;
@@ -82,28 +86,40 @@
             try { g.fillRoundRect(bg, 0, 0, w, h, 8, 8); }
             catch (fillError) { g.fillRect(bg, 0, 0, w, h); }
             var left = 22, top = 12, gw = Math.max(40, w - 34), gh = Math.max(40, h - 26);
-            var i, x, y, p, last, next, x1, y1, x2, y2;
+            var i, x, y, p, x1, y1, x2, y2;
+            g.newPath();
             for (i = 0; i <= 4; i++) {
                 x = left + gw * i / 4;
                 y = top + gh * i / 4;
-                g.drawLine(gridPen, x, top, x, top + gh);
-                g.drawLine(gridPen, left, y, left + gw, y);
+                g.moveTo(x, top);
+                g.lineTo(x, top + gh);
+                g.moveTo(left, y);
+                g.lineTo(left + gw, y);
             }
+            g.strokePath(gridPen);
             x1 = left + gw * values.outInfluence / 100;
             y1 = top + gh * (1 - values.outSpeed * values.outInfluence / 100);
             x2 = left + gw * (1 - values.inInfluence / 100);
             y2 = top + gh * (values.inSpeed * values.inInfluence / 100);
-            g.drawLine(handlePen, left, top + gh, x1, y1);
-            g.drawLine(handlePen, left + gw, top, x2, y2);
-            last = curvePoint(0);
-            for (i = 1; i <= 36; i++) {
-                p = curvePoint(i / 36);
-                var px1 = left + gw * last[0], py1 = top + gh * (1 - last[1]);
-                var px2 = left + gw * p[0], py2 = top + gh * (1 - p[1]);
-                g.drawLine(glowPen, px1, py1, px2, py2);
-                g.drawLine(midPen, px1, py1, px2, py2);
-                g.drawLine(curvePen, px1, py1, px2, py2);
-                last = p;
+            g.newPath();
+            g.moveTo(left, top + gh);
+            g.lineTo(x1, y1);
+            g.moveTo(left + gw, top);
+            g.lineTo(x2, y2);
+            g.strokePath(handlePen);
+            var curvePenSet = [glowPen, midPen, curvePen];
+            var ci, last, px, py;
+            for (ci = 0; ci < curvePenSet.length; ci++) {
+                last = curvePoint(0);
+                g.newPath();
+                g.moveTo(left + gw * last[0], top + gh * (1 - last[1]));
+                for (i = 1; i <= 36; i++) {
+                    p = curvePoint(i / 36);
+                    px = left + gw * p[0];
+                    py = top + gh * (1 - p[1]);
+                    g.lineTo(px, py);
+                }
+                g.strokePath(curvePenSet[ci]);
             }
             var handleSize = 7;
             g.fillRect(dotBrush, x1 - handleSize / 2, y1 - handleSize / 2, handleSize, handleSize);
@@ -116,12 +132,29 @@
     }
     graph.onDraw = drawCurve;
 
+    function redrawGraph() {
+        try { graph.notify("onDraw"); } catch (e) {}
+        try { graph.onDraw.call(graph); } catch (e2) {}
+        try { if (ui.update) ui.update(); } catch (e3) {}
+    }
+
     var controlsCard = ui.add("panel", undefined, "CURVE CONTROLS");
     controlsCard.orientation = "column";
     controlsCard.alignChildren = ["fill", "top"];
     controlsCard.spacing = 5;
     controlsCard.margins = 10;
     var params = {};
+
+    function markCustomCurve() {
+        if (loadingPreset) return;
+        presetDropdown.selection = null;
+        var i;
+        for (i = 0; i < presetCards.length; i++) {
+            presetCards[i].active = false;
+            try { presetCards[i].panel.onDraw.call(presetCards[i].panel); } catch (e) {}
+        }
+        status.text = "Custom curve · ubah influence/speed lalu Apply Curve.";
+    }
 
     function makeParam(parent, key, title, min, max, initial, scale, decimals) {
         var row = parent.add("group");
@@ -137,8 +170,8 @@
         slider.onChanging = function () {
             values[key] = slider.value / scale;
             input.text = values[key].toFixed(decimals);
-            drawCurve();
-            try { if (ui.update) ui.update(); } catch (e) {}
+            markCustomCurve();
+            redrawGraph();
         };
         input.onChange = function () {
             var number = parseFloat(String(input.text).replace(",", "."));
@@ -148,8 +181,8 @@
             values[key] = number;
             slider.value = number * scale;
             input.text = number.toFixed(decimals);
-            drawCurve();
-            try { if (ui.update) ui.update(); } catch (e) {}
+            markCustomCurve();
+            redrawGraph();
         };
     }
 
@@ -220,13 +253,17 @@
     function loadPreset(index) {
         if (index < 0 || index >= PRESETS.length) return;
         var preset = PRESETS[index];
+        loadingPreset = true;
         values.outInfluence = preset.outInfluence;
         values.outSpeed = preset.outSpeed;
         values.inInfluence = preset.inInfluence;
         values.inSpeed = preset.inSpeed;
         presetDropdown.selection = index;
         var i;
-        for (i = 0; i < presetCards.length; i++) presetCards[i].active = presetCards[i].index === index;
+        for (i = 0; i < presetCards.length; i++) {
+            presetCards[i].active = presetCards[i].index === index;
+            try { presetCards[i].panel.onDraw.call(presetCards[i].panel); } catch (redrawError) {}
+        }
         params.outInfluence.slider.value = values.outInfluence;
         params.outInfluence.input.text = values.outInfluence.toFixed(0);
         params.outSpeed.slider.value = values.outSpeed * 100;
@@ -235,8 +272,10 @@
         params.inInfluence.input.text = values.inInfluence.toFixed(0);
         params.inSpeed.slider.value = values.inSpeed * 100;
         params.inSpeed.input.text = values.inSpeed.toFixed(2);
+        loadingPreset = false;
         drawCurve();
-        try { if (ui.update) ui.update(); } catch (e) {}
+        status.text = "Preset “" + preset.name + "” dimuat. Pilih keyframe, lalu Apply Curve.";
+        redrawGraph();
     }
 
     function valueArray(value) {
@@ -254,52 +293,116 @@
         return out;
     }
 
-    function segmentSpeeds(prop, fromKey, toKey, dimensions) {
-        var from = valueArray(prop.keyValue(fromKey));
-        var to = valueArray(prop.keyValue(toKey));
-        var dt = prop.keyTime(toKey) - prop.keyTime(fromKey);
-        var result = [], i;
-        if (!dt) dt = 1;
-        for (i = 0; i < dimensions; i++) result.push(((to[Math.min(i, to.length - 1)] - from[Math.min(i, from.length - 1)]) / dt));
+    function layerOf(prop) {
+        try { return prop.propertyGroup(prop.propertyDepth); } catch (e) { return null; }
+    }
+
+    function pathLength(start, outTangent, inTangent, end) {
+        var dimensions = Math.max(start.length, end.length);
+        var points = [], length = 0, previous = null, d, step, t, u, point, sum;
+        for (d = 0; d < dimensions; d++) {
+            var a = start[d] || 0;
+            var b = end[d] || 0;
+            points.push([a, a + ((outTangent && outTangent[d]) || 0), b + ((inTangent && inTangent[d]) || 0), b]);
+        }
+        for (step = 0; step <= 64; step++) {
+            t = step / 64;
+            u = 1 - t;
+            point = [];
+            for (d = 0; d < dimensions; d++) {
+                point.push(u * u * u * points[d][0] + 3 * u * u * t * points[d][1] + 3 * u * t * t * points[d][2] + t * t * t * points[d][3]);
+            }
+            if (previous) {
+                sum = 0;
+                for (d = 0; d < dimensions; d++) sum += (point[d] - previous[d]) * (point[d] - previous[d]);
+                length += Math.sqrt(sum);
+            }
+            previous = point;
+        }
+        return length;
+    }
+
+    // Segment average speed is measured in the property's own units and layer time.
+    function segmentSpeeds(prop, fromKey, dimensions) {
+        var layer = layerOf(prop);
+        var stretch = layer && layer.stretch ? layer.stretch : 100;
+        var duration = (prop.keyTime(fromKey + 1) - prop.keyTime(fromKey)) * 100 / stretch;
+        var from = prop.keyValue(fromKey);
+        var to = prop.keyValue(fromKey + 1);
+        var fromArray = valueArray(from), toArray = valueArray(to);
+        var result = [], i, type, speed;
+        if (!(duration > 0) || !isFinite(duration)) return null;
+        try { type = prop.propertyValueType; } catch (e) { type = null; }
+        if (typeof PropertyValueType !== "undefined" &&
+            (type === PropertyValueType.TwoD_SPATIAL || type === PropertyValueType.ThreeD_SPATIAL)) {
+            try {
+                speed = pathLength(fromArray, prop.keyOutSpatialTangent(fromKey), prop.keyInSpatialTangent(fromKey + 1), toArray) / duration;
+            } catch (spatialError) {
+                speed = 0;
+            }
+            for (i = 0; i < dimensions; i++) result.push(speed);
+        } else if (typeof from === "number" && typeof to === "number") {
+            result.push((to - from) / duration);
+        } else if (from instanceof Array && to instanceof Array && from.length === to.length) {
+            for (i = 0; i < dimensions; i++) result.push(((to[Math.min(i, to.length - 1)] || 0) - (from[Math.min(i, from.length - 1)] || 0)) / duration);
+        } else {
+            // Shape and other non-numeric values ease their normalized progress.
+            for (i = 0; i < dimensions; i++) result.push(1 / duration);
+        }
         return result;
     }
 
     function makeEaseArray(speeds, influence, dimensions, multiplier) {
         var out = [], i;
-        for (i = 0; i < dimensions; i++) out.push(new KeyframeEase(speeds[Math.min(i, speeds.length - 1)] * multiplier, influence));
+        for (i = 0; i < dimensions; i++) out.push(new KeyframeEase((speeds[Math.min(i, speeds.length - 1)] || 0) * multiplier, influence));
         return out;
     }
 
     function applyCurveToProperty(prop, mode) {
         var selectedKeys;
-        try { selectedKeys = prop.selectedKeys; } catch (e) { return 0; }
-        if (!selectedKeys || !selectedKeys.length || !prop.numKeys) return 0;
-        var count = 0, i, key, value, dimensions, inEases, outEases, inType, outType, speeds;
+        try {
+            if (typeof PropertyType !== "undefined" && prop.propertyType !== PropertyType.PROPERTY) return { eased: 0, roving: 0 };
+            if (prop.numKeys < 2 || (prop.isInterpolationTypeValid && !prop.isInterpolationTypeValid(KeyframeInterpolationType.BEZIER))) return { eased: 0, roving: 0 };
+            selectedKeys = prop.selectedKeys;
+        } catch (e) { return { eased: 0, roving: 0 }; }
+        if (!selectedKeys || !selectedKeys.length) return { eased: 0, roving: 0 };
+        var count = 0, roving = 0, i, key, value, dimensions, inEases, outEases, inType, outType, speeds, didSide;
         for (i = 0; i < selectedKeys.length; i++) {
             key = selectedKeys[i];
             try {
+                if (prop.keyRoving && prop.keyRoving(key)) { roving++; continue; }
                 value = valueArray(prop.keyValue(key));
                 dimensions = value.length;
-                inEases = copyEases(prop.keyInTemporalEaseAtKey(key), dimensions);
-                outEases = copyEases(prop.keyOutTemporalEaseAtKey(key), dimensions);
+                inEases = copyEases(prop.keyInTemporalEase(key), dimensions);
+                outEases = copyEases(prop.keyOutTemporalEase(key), dimensions);
                 inType = prop.keyInInterpolationType(key);
                 outType = prop.keyOutInterpolationType(key);
+                didSide = false;
                 if (mode !== "Out only" && key > 1) {
-                    speeds = segmentSpeeds(prop, key - 1, key, dimensions);
-                    inEases = makeEaseArray(speeds, values.inInfluence, dimensions, values.inSpeed);
-                    inType = KeyframeInterpolationType.BEZIER;
+                    speeds = segmentSpeeds(prop, key - 1, dimensions);
+                    if (speeds) {
+                        inEases = makeEaseArray(speeds, values.inInfluence, dimensions, values.inSpeed);
+                        inType = KeyframeInterpolationType.BEZIER;
+                        didSide = true;
+                    }
                 }
                 if (mode !== "In only" && key < prop.numKeys) {
-                    speeds = segmentSpeeds(prop, key, key + 1, dimensions);
-                    outEases = makeEaseArray(speeds, values.outInfluence, dimensions, values.outSpeed);
-                    outType = KeyframeInterpolationType.BEZIER;
+                    speeds = segmentSpeeds(prop, key, dimensions);
+                    if (speeds) {
+                        outEases = makeEaseArray(speeds, values.outInfluence, dimensions, values.outSpeed);
+                        outType = KeyframeInterpolationType.BEZIER;
+                        didSide = true;
+                    }
                 }
+                if (!didSide) continue;
+                // Break linked/continuous handles before applying different In and Out curves.
+                try { if (prop.keyTemporalContinuous(key)) prop.setTemporalContinuousAtKey(key, false); } catch (continuousError) {}
                 prop.setTemporalEaseAtKey(key, inEases, outEases);
                 prop.setInterpolationTypeAtKey(key, inType, outType);
                 count++;
             } catch (keyError) {}
         }
-        return count;
+        return { eased: count, roving: roving };
     }
 
     function applyCurve() {
@@ -314,14 +417,19 @@
             return;
         }
         var mode = applyMode.selection ? applyMode.selection.text : "In & Out";
-        var changed = 0, i;
+        var changed = 0, roving = 0, i, result;
         app.beginUndoGroup("Curve Studio · Apply Easing");
         try {
-            for (i = 0; i < props.length; i++) changed += applyCurveToProperty(props[i], mode);
+            for (i = 0; i < props.length; i++) {
+                result = applyCurveToProperty(props[i], mode);
+                changed += result.eased;
+                roving += result.roving;
+            }
         } finally {
             app.endUndoGroup();
         }
-        status.text = changed ? "Kurva halus diterapkan pada " + changed + " keyframe terpilih. Undo: Ctrl/Cmd+Z." : "Tidak ada keyframe terpilih pada properti ini.";
+        if (changed) status.text = "Kurva halus diterapkan pada " + changed + " keyframe terpilih." + (roving ? " " + roving + " roving keyframe dilewati." : "") + " Undo: Ctrl/Cmd+Z.";
+        else status.text = roving ? "Keyframe terpilih roving dan tidak dapat di-ease. Matikan Roving lalu coba lagi." : "Pilih keyframe pada properti yang mendukung Bezier.";
     }
 
     presetDropdown.onChange = function () {
