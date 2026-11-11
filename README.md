@@ -73,11 +73,13 @@ Acuan desain: [Apple HIG — Materials & Liquid Glass](https://developer.apple.c
 
 Berkas: [`Apple Card Layout Studio.jsx`](./Apple%20Card%20Layout%20Studio.jsx)
 
-## 6. fyy apple style — status import sumber (belum siap)
+## 6. fyy apple style — importer `.fig` (uji Action Sheet)
 
-Panel **belum memenuhi syarat penggunaan aset asli**. Berkas JSX yang ada masih membangun ulang Action Sheet dengan geometri dan teks hard-code; ia **tidak membaca atau mengimpor** `Action Sheet.fig` maupun `Action Sheet.svg`. Karena pengguna menolak aset pengganti buatan tangan, jangan gunakan tombol pemasangan pada prototipe ini sebagai hasil akhir.
+Panel bernama persis **fyy apple style** memuat data vektor dan teks yang diekstrak dari node sumber `1:76` pada **Action Sheet.fig** (format fig-kiwi v101). Saat dipasang, panel membuat precomp 300 × 296 dengan shape path native dan teks AE editable, lalu memberi stagger entrance motion. Bundle JSX memuat payload yang diturunkan dari `.fig`; tidak menggunakan SVG ekspor, thumbnail, atau artwork yang digambar ulang sebagai pengganti.
 
-Sumber yang tersedia memang memuat Action Sheet.fig dan SVG ekspor, tetapi EffectCraft/ExtendScript belum memiliki jalur import `.fig` yang teruji di repo ini. SVG berisi vector yang dapat menjadi sumber konversi, namun jalur konversi ke native shape/text layers serta batas editabilitas dan fidelity efek `GLASS` belum diimplementasikan atau diuji. Tidak ada klaim bahwa efek refraksi dapat dipertahankan.
+Batas fidelity: efek Figma `GLASS` berisi refraction, noise, specular, serta inner effects yang tidak dipetakan ke EffectCraft/AE; layer GLASS sengaja dilewati dan panel memberi tahu pengguna. Shadow native mengambil parameter drop shadow sumber utama; efek blend mode lain yang proprietary mungkin berbeda. Tipografi mencoba SF Pro jika font itu tersedia; teks dan node asal tetap dinamai untuk inspeksi/edit.
 
-Katalog 43 komponen belum dikerjakan. Panel perlu diganti dengan importer yang menggunakan SVG/.fig sumber secara langsung; konfirmasi terlebih dahulu bila pilihan jalur impor mengubah fidelity/editability. Kode prototipe: [`fyy apple style.jsx`](./fyy%20apple%20style.jsx).
+**Cakupan saat ini hanya Action Sheet sebagai tes importer**; katalog 43 komponen dan pilihan item lain belum tercakup. Validasi sudah mencakup parse/smoke test di mock After Effects, bukan runtime EffectCraft/After Effects yang sebenarnya.
+
+Berkas: [`fyy apple style.jsx`](./fyy%20apple%20style.jsx)
 
