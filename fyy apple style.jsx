@@ -55,23 +55,27 @@
     function setOpacity(layer, value) {
         try { layer.property("ADBE Transform Group").property("ADBE Opacity").setValue(value); } catch (e) {}
     }
-    function makeShape(pathCommands) {
+    function makeShape(pathCommands, width, height) {
+        // AE Shape paths are centered on the layer's anchor. Figma path data is
+        // local top-left space, so center every vertex before placing the layer
+        // at the source bounds center below. Tangents are relative and unchanged.
+        var ox = width / 2, oy = height / 2;
         var vertices = [], inTangents = [], outTangents = [], closed = false, current = null, i, c, end, out;
         for (i = 0; i < pathCommands.length; i++) {
             c = pathCommands[i];
             if (c.type === "M") {
-                current = [c.x, c.y];
+                current = [c.x - ox, c.y - oy];
                 vertices.push(current); inTangents.push([0, 0]); outTangents.push([0, 0]);
             } else if (c.type === "L") {
-                current = [c.x, c.y];
+                current = [c.x - ox, c.y - oy];
                 vertices.push(current); inTangents.push([0, 0]); outTangents.push([0, 0]);
             } else if (c.type === "C") {
                 if (!vertices.length) continue;
-                out = [c.c1x - vertices[vertices.length - 1][0], c.c1y - vertices[vertices.length - 1][1]];
+                out = [c.c1x - ox - vertices[vertices.length - 1][0], c.c1y - oy - vertices[vertices.length - 1][1]];
                 outTangents[outTangents.length - 1] = out;
-                end = [c.x, c.y];
+                end = [c.x - ox, c.y - oy];
                 vertices.push(end);
-                inTangents.push([c.c2x - c.x, c.c2y - c.y]);
+                inTangents.push([c.c2x - ox - end[0], c.c2y - oy - end[1]]);
                 outTangents.push([0, 0]);
                 current = end;
             } else if (c.type === "Z") closed = true;
@@ -91,7 +95,7 @@
         group.name = "Figma vector · " + entry.sourceId;
         var contents = group.property("ADBE Vectors Group");
         var path = contents.addProperty("ADBE Vector Shape - Group");
-        path.property("ADBE Vector Shape").setValue(makeShape(entry.path));
+        path.property("ADBE Vector Shape").setValue(makeShape(entry.path, entry.w, entry.h));
         var fill = contents.addProperty("ADBE Vector Graphic - Fill");
         fill.property("ADBE Vector Fill Color").setValue(color3(entry.fill));
         fill.property("ADBE Vector Fill Opacity").setValue(entry.opacity * 100);
