@@ -103,7 +103,7 @@
         return layer;
     }
     function addSourceText(comp, entry) {
-        var layer = comp.layers.addText(entry.text);
+        var layer = comp.layers.addText(entry.text), positionX = entry.x, justification = entry.align;
         layer.name = "Figma text " + entry.sourceId + " · " + entry.name + " (editable)";
         var source = layer.property("ADBE Text Properties").property("ADBE Text Document");
         var doc = source.value;
@@ -114,10 +114,17 @@
         try { doc.font = entry.fontFamily === "SF Pro" ? (entry.fontStyle === "Semibold" ? "SFPro-Semibold" : "SFPro-Regular") : entry.fontFamily; } catch (eFont) {}
         try { doc.fauxBold = entry.fontStyle === "Semibold"; } catch (eBold) {}
         try { doc.autoLeading = false; doc.leading = 22; } catch (eLeading) {}
-        try { doc.boxText = true; doc.boxTextSize = [entry.w, entry.h]; } catch (eBox) {}
-        try { doc.justification = entry.align === "CENTER" ? ParagraphJustification.CENTER_JUSTIFY : (entry.align === "RIGHT" ? ParagraphJustification.RIGHT_JUSTIFY : ParagraphJustification.LEFT_JUSTIFY); } catch (eAlign) {}
+        // Figma's compact label bounds are glyph-measurement boxes. AE may have
+        // a wider fallback font, so keep labels as point text to prevent wrapping
+        // (notably "Action 2"). The source description remains paragraph text.
+        try {
+            if (entry.name === "Description") { doc.boxText = true; doc.boxTextSize = [entry.w, entry.h]; }
+            else doc.boxText = false;
+        } catch (eBox) {}
+        if (entry.name === "Label") { positionX = entry.x + entry.w / 2; justification = "CENTER"; }
+        try { doc.justification = justification === "CENTER" ? ParagraphJustification.CENTER_JUSTIFY : (justification === "RIGHT" ? ParagraphJustification.RIGHT_JUSTIFY : ParagraphJustification.LEFT_JUSTIFY); } catch (eAlign) {}
         source.setValue(doc);
-        setPosition(layer, entry.x, entry.y + entry.baseline);
+        setPosition(layer, positionX, entry.y + entry.baseline);
         setOpacity(layer, entry.opacity * 100);
         return layer;
     }
