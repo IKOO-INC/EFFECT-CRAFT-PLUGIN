@@ -1,9 +1,8 @@
 /*
-    fyy apple style — Figma-driven component + motion test panel for EffectCraft.
-    Prototype scope: Action Sheet from the supplied Action Sheet.fig source.
-    Generated content uses editable native AE shape and text layers; no thumbnail is used.
-    Figma's proprietary GLASS/refraction material is represented by editable surface/fill
-    layers and a native drop shadow where supported; exact refraction is not reproduced.
+    fyy apple style — NON-FINAL prototype; do not present as a Figma asset importer.
+    This draft hand-reconstructs Action Sheet from inspected values and does not read
+    Action Sheet.fig or Action Sheet.svg. It is intentionally disabled until replaced
+    by a source-driven importer, per the user's no-manual-substitutes requirement.
 */
 (function (thisObj) {
     var TITLE = "fyy apple style";
@@ -16,13 +15,13 @@
     ui.margins = 11;
     ui.minimumSize = [310, 310];
 
-    var heading = ui.add("panel", undefined, "FYY APPLE STYLE");
+    var heading = ui.add("panel", undefined, "FYY APPLE STYLE · DRAFT NONFINAL");
     heading.orientation = "column";
     heading.alignChildren = ["fill", "top"];
     heading.spacing = 3;
     heading.margins = 9;
-    heading.add("statictext", undefined, "Konten Figma + motion editable dalam satu klik");
-    heading.add("statictext", undefined, "Paket uji awal · sumber: Action Sheet.fig");
+    heading.add("statictext", undefined, "Importer aset sumber belum diimplementasikan");
+    heading.add("statictext", undefined, "Draft ini bukan render Action Sheet.fig / SVG");
 
     var pickerPanel = ui.add("panel", undefined, "PILIH KOMPONEN");
     pickerPanel.orientation = "column";
@@ -31,7 +30,7 @@
     pickerPanel.margins = 9;
     var componentList = pickerPanel.add("dropdownlist", undefined, ["Action Sheet · 300 × 296 · Figma"]);
     componentList.selection = 0;
-    var sourceInfo = pickerPanel.add("statictext", undefined, "Teks dan shape dibuat sebagai layer editable di precomp.");
+    var sourceInfo = pickerPanel.add("statictext", undefined, "PERINGATAN: komponen ini masih berupa rekonstruksi hard-code, bukan aset sumber.");
     sourceInfo.characters = 42;
 
     var timingPanel = ui.add("panel", undefined, "MOTION OTOMATIS");
@@ -44,9 +43,10 @@
     durationInput.characters = 5;
     timingPanel.add("statictext", undefined, "d • stagger tombol 0.06 d");
 
-    var installButton = ui.add("button", undefined, "PASANG + ANIMASIKAN");
+    var installButton = ui.add("button", undefined, "IMPORTER SUMBER BELUM TERSEDIA");
     installButton.preferredSize.height = 34;
-    var status = ui.add("statictext", undefined, "Pilih composition aktif, lalu pasang komponen.", { multiline: true });
+    var status = ui.add("statictext", undefined, "Pemasangan dinonaktifkan sampai importer memakai aset Figma/SVG yang sebenarnya.", { multiline: true });
+    installButton.enabled = false;
     status.characters = 44;
 
     function rgb(c) { return [c[0], c[1], c[2]]; }

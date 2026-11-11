@@ -73,13 +73,11 @@ Acuan desain: [Apple HIG — Materials & Liquid Glass](https://developer.apple.c
 
 Berkas: [`Apple Card Layout Studio.jsx`](./Apple%20Card%20Layout%20Studio.jsx)
 
-## 6. fyy apple style — prototipe Figma → EffectCraft
+## 6. fyy apple style — status import sumber (belum siap)
 
-Panel uji awal memakai **Action Sheet.fig** yang diunggah pengguna. Pilih Action Sheet lalu klik **PASANG + ANIMASIKAN** untuk membuat precomp 300 × 296 px di composition aktif. Precomp berisi shape vector dan text layer native yang dapat diedit; animasi masuk memakai opacity/position dengan stagger singkat untuk heading, deskripsi, dan tombol. Klik ganda precomp untuk mengedit copy maupun shape.
+Panel **belum memenuhi syarat penggunaan aset asli**. Berkas JSX yang ada masih membangun ulang Action Sheet dengan geometri dan teks hard-code; ia **tidak membaca atau mengimpor** `Action Sheet.fig` maupun `Action Sheet.svg`. Karena pengguna menolak aset pengganti buatan tangan, jangan gunakan tombol pemasangan pada prototipe ini sebagai hasil akhir.
 
-Sumber Figma mempertahankan teks dan struktur komponen; isi panel ini dipetakan ke layer EffectCraft, bukan memakai thumbnail. Efek Figma `GLASS`/refraction belum memiliki padanan yang dijamin sama di EffectCraft: fill transparan dan drop shadow editable disertakan, sedangkan refraction/noise/specular Figma belum direproduksi. SF Pro dipakai bila tersedia di sistem.
+Sumber yang tersedia memang memuat Action Sheet.fig dan SVG ekspor, tetapi EffectCraft/ExtendScript belum memiliki jalur import `.fig` yang teruji di repo ini. SVG berisi vector yang dapat menjadi sumber konversi, namun jalur konversi ke native shape/text layers serta batas editabilitas dan fidelity efek `GLASS` belum diimplementasikan atau diuji. Tidak ada klaim bahwa efek refraksi dapat dipertahankan.
 
-**Cakupan sekarang hanya Action Sheet sebagai uji alur.** Item lain yang sudah diunggah belum tercakup di katalog prototipe ini. Perluasan dilakukan setelah aset awal diuji di EffectCraft. Belum divalidasi dalam runtime EffectCraft.
-
-Berkas: [`fyy apple style.jsx`](./fyy%20apple%20style.jsx)
+Katalog 43 komponen belum dikerjakan. Panel perlu diganti dengan importer yang menggunakan SVG/.fig sumber secara langsung; konfirmasi terlebih dahulu bila pilihan jalur impor mengubah fidelity/editability. Kode prototipe: [`fyy apple style.jsx`](./fyy%20apple%20style.jsx).
 
