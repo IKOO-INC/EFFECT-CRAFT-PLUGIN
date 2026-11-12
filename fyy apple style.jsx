@@ -203,8 +203,9 @@
         try {
             var result = buildSourceComp(parentComp, data, duration), assetComp = result.comp, layer = parentComp.layers.add(assetComp);
             layer.name = "FYY · " + data.name + " · .fig + Motion";
-            var scale = Math.min(parentComp.width * 0.68 / data.width, parentComp.height * 0.68 / data.height) * 100;
-            layer.property("ADBE Transform Group").property("ADBE Scale").setValue([scale, scale]);
+            // Preserve the complete authored .fig component at 100% scale.
+            // No auto-fit to the target comp: use a sufficiently large target
+            // composition instead of shrinking or constraining imported content.
             layer.property("ADBE Transform Group").property("ADBE Position").setValue([parentComp.width / 2, parentComp.height / 2]);
             layer.startTime = parentComp.time; layer.inPoint = parentComp.time; layer.outPoint = Math.min(parentComp.duration, parentComp.time + assetComp.duration); parentComp.selectedLayers = [layer];
             var message = data.name + " terpasang dari .fig; " + result.layerCount + " layer editable.";
