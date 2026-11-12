@@ -75,7 +75,7 @@ Berkas: [`Apple Card Layout Studio.jsx`](./Apple%20Card%20Layout%20Studio.jsx)
 
 ## 6. fyy apple style — versi 1.0.1
 
-Panel bernama persis **fyy apple style** menyediakan dropdown dari **34 berkas `.fig` per-item** yang dapat diunduh dari folder Drive. Pilih komponen, lalu tekan **PASANG + ANIMASIKAN** untuk membuat precomp dengan path native AE, teks editable, aset gambar asli bila ada, dan stagger entrance. Payload vektor/teks diturunkan dari node `.fig`; file SVG tidak digunakan sebagai sumber.
+Panel bernama persis **fyy apple style** menyediakan dropdown dari **34 berkas `.fig` per-item** yang dapat diunduh dari folder Drive. Pilih komponen, lalu tekan **PASANG + ANIMASIKAN** untuk membuat precomp dengan path native AE, teks editable, aset gambar asli bila ada, dan stagger entrance. Payload vektor/teks diturunkan dari node `.fig`; file SVG tidak digunakan sebagai sumber. Glyph simbol PUA dari Figma dikonversi ke mask path vector asli dari glyph-outline blob `.fig`, sehingga tidak bergantung pada font simbol yang terpasang di host.
 
 Komponen hasil impor dipertahankan pada ukuran sumber penuh: panel tidak melakukan auto-fit/scale ke komposisi tujuan, dan tidak menerapkan batas ukuran per elemen. Jika komposisi tujuan lebih kecil, besarkan komposisi tujuan alih-alih mengecilkan atau memotong elemen sumber. Ukuran/transform internal gambar mengikuti data bounds `.fig` agar tampil sesuai tata letak sumber.
 
@@ -85,7 +85,7 @@ Koordinat path Figma (origin kiri-atas) dipusatkan ke anchor shape AE sebelum la
 
 Batas efek: Figma `GLASS`/refraction dan background blur proprietary belum dipetakan identik; layer GLASS dilewati dan status impor memberi peringatan. Gradient hanya memakai stop warna sumber pertama. SF Pro dipakai bila terpasang; teks tetap native/editable. Path, ukuran, posisi, fill warna, serta gambar berasal dari data `.fig`.
 
-**Validasi:** syntax check seluruh panel dan mock smoke test yang membuat komposisi untuk seluruh 34 entri (termasuk tes anchor path, label Action 2, image import, serta keyframe). Runtime EffectCraft/After Effects belum tersedia untuk verifikasi akhir.
+**Validasi:** syntax check seluruh panel dan mock smoke test yang membuat komposisi untuk seluruh 34 entri (anchor path, label Action 2, image import, keyframe). Perbaikan glyph terbaru lolos syntax dan structural check untuk 104 node simbol sumber serta 21 outline codepoint/style yang diekstrak dari `.fig`; runtime EffectCraft/After Effects masih perlu verifikasi visual.
 
 Catatan sizing, screenshot bug glyph, audit template PSD/AI, dan referensi symbol `.fig`: [catatan QA importer](./docs/importer-feedback/README.md).
 
