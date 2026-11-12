@@ -205,6 +205,10 @@
         cache[hash] = footage;
         return footage;
     }
+    function discardImportedImages(cache) {
+        var hash;
+        for (hash in cache) if (cache.hasOwnProperty(hash)) { try { cache[hash].remove(); } catch (eRemoveFootage) {} }
+    }
     function addSourceImage(comp, entry, cache) {
         var footage = importSourceImage(entry.imageHash, cache), layer = comp.layers.add(footage);
         layer.name = "Figma image " + entry.sourceId + " · " + entry.imageName;
@@ -239,28 +243,44 @@
         try { var count = 1, value = prop.value, ins = [], outs = [], i, e = new KeyframeEase(0, 72); if (value instanceof Array) count = value.length; for (i = 0; i < count; i++) { ins.push(e); outs.push(e); } prop.setTemporalEaseAtKey(index, ins, outs); prop.setInterpolationTypeAtKey(index, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER); } catch (eEase) {}
     }
     function animate(layer, start, duration, delay, lift) {
-        var tr = layer.property("ADBE Transform Group"), pos = tr.property("ADBE Position"), opacity = tr.property("ADBE Opacity"), base = pos.valueAtTime(start + delay, false), t0 = start + delay, t1 = t0 + duration;
-        pos.setValueAtTime(t0, [base[0], base[1] + lift]); pos.setValueAtTime(t1, base); opacity.setValueAtTime(t0, 0); opacity.setValueAtTime(t1, 100);
-        ease(pos, pos.nearestKeyIndex(t0)); ease(pos, pos.nearestKeyIndex(t1)); ease(opacity, opacity.nearestKeyIndex(t0)); ease(opacity, opacity.nearestKeyIndex(t1));
+        // Preserve source visibility at the insertion frame. A zero-opacity first
+        // key made the imported design appear empty when added at the playhead,
+        // and the final 100% key also overwrote authored Figma opacity.
+        var tr = layer.property("ADBE Transform Group"), pos = tr.property("ADBE Position"), base = pos.valueAtTime(start + delay, false), t0 = start + delay, t1 = t0 + duration;
+        pos.setValueAtTime(t0, [base[0], base[1] + lift]); pos.setValueAtTime(t1, base);
+        ease(pos, pos.nearestKeyIndex(t0)); ease(pos, pos.nearestKeyIndex(t1));
     }
     function hasEffect(entry, effectName) { var i; for (i = 0; entry.sourceEffects && i < entry.sourceEffects.length; i++) if (entry.sourceEffects[i].type === effectName && entry.sourceEffects[i].visible !== false) return true; return false; }
     function buildSourceComp(parentComp, data, duration) {
         var fps = parentComp.frameRate || 30, comp = app.project.items.addComp("FYY · " + data.name + " · .fig source", data.width, data.height, parentComp.pixelAspect || 1, Math.max(parentComp.duration, 3), fps);
         comp.bgColor = [0, 0, 0];
         var created = [], skippedGlass = false, skippedBlur = false, skippedGradient = false, glyphCount = 0, imageCache = {}, i, entry, layer;
-        for (i = 0; i < data.layers.length; i++) {
-            entry = data.layers[i];
-            if (hasEffect(entry, "GLASS")) { skippedGlass = true; continue; }
-            if (hasEffect(entry, "BACKGROUND_BLUR") || hasEffect(entry, "FOREGROUND_BLUR")) skippedBlur = true;
-            if (entry.gradientStops && entry.gradientStops.length) skippedGradient = true;
-            if (entry.kind === "image") layer = addSourceImage(comp, entry, imageCache);
-            else if (entry.kind === "text") { if (entry.glyphKey) glyphCount++; layer = addSourceTextOrGlyph(comp, entry); }
-            else layer = addSourceShape(comp, entry);
-            if (entry.kind === "shape" && entry.name.indexOf("Fill + Shadow") === 0 && entry.name.indexOf("fill 1") >= 0) addSourceShadow(layer, entry.sourceEffects);
-            created.push({ layer: layer, delay: 0.42 * i / Math.max(data.layers.length - 1, 1), lift: entry.kind === "text" ? 4 : 6 });
+        try {
+            for (i = 0; i < data.layers.length; i++) {
+                entry = data.layers[i];
+                if (hasEffect(entry, "GLASS")) { skippedGlass = true; continue; }
+                if (hasEffect(entry, "BACKGROUND_BLUR") || hasEffect(entry, "FOREGROUND_BLUR")) skippedBlur = true;
+                if (entry.gradientStops && entry.gradientStops.length) skippedGradient = true;
+                if (entry.kind === "image") layer = addSourceImage(comp, entry, imageCache);
+                else if (entry.kind === "text") { if (entry.glyphKey) glyphCount++; layer = addSourceTextOrGlyph(comp, entry); }
+                else layer = addSourceShape(comp, entry);
+                if (entry.kind === "shape" && entry.name.indexOf("Fill + Shadow") === 0 && entry.name.indexOf("fill 1") >= 0) addSourceShadow(layer, entry.sourceEffects);
+                created.push({ layer: layer, delay: 0.42 * i / Math.max(data.layers.length - 1, 1), lift: entry.kind === "text" ? 4 : 6 });
+            }
+            // Explicitly restore Figma painter order instead of depending on the
+            // host's layer-collection insertion behavior. Earlier source records are
+            // behind later records; placing each in source order at the top leaves
+            // the final record on top and the first (usually a background) at bottom.
+            for (i = 0; i < created.length; i++) created[i].layer.moveToBeginning();
+            for (i = 0; i < created.length; i++) animate(created[i].layer, 0, duration, created[i].delay, created[i].lift);
+            return { comp: comp, imageCache: imageCache, skippedGlass: skippedGlass, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
+        } catch (eBuildComp) {
+            // A failed child must not survive as an orphaned white-box comp or
+            // leave its newly imported footage behind in the Project panel.
+            try { comp.remove(); } catch (eRemoveBuildComp) {}
+            discardImportedImages(imageCache);
+            throw eBuildComp;
         }
-        for (i = 0; i < created.length; i++) animate(created[i].layer, 0, duration, created[i].delay, created[i].lift);
-        return { comp: comp, skippedGlass: skippedGlass, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
     }
     function install() {
         var parentComp = app.project ? app.project.activeItem : null;
@@ -269,9 +289,11 @@
         var data = BUNDLE_DATA.components[componentList.selection.index], duration = parseFloat(durationInput.text);
         if (isNaN(duration) || duration < 0.12 || duration > 2) duration = 0.36;
         app.beginUndoGroup("fyy apple style 1.0.1 · " + data.name);
+        var result = null, assetComp = null, layer = null;
         try {
-            var result = buildSourceComp(parentComp, data, duration), assetComp = result.comp, layer = parentComp.layers.add(assetComp);
+            result = buildSourceComp(parentComp, data, duration); assetComp = result.comp; layer = parentComp.layers.add(assetComp);
             layer.name = "FYY · " + data.name + " · .fig + Motion";
+            layer.moveToBeginning();
             // Preserve the complete authored .fig component at 100% scale.
             // No auto-fit to the target comp: use a sufficiently large target
             // composition instead of shrinking or constraining imported content.
@@ -283,7 +305,14 @@
             if (result.skippedBlur) message += " Blur latar Figma tidak dipetakan identik.";
             if (result.skippedGradient) message += " Gradient memakai stop warna sumber pertama.";
             status.text = message + " Buka precomp untuk edit teks/vector.";
-        } catch (eBuild) { status.text = "Gagal memasang " + data.name + ": " + eBuild.toString(); }
+        } catch (eBuild) {
+            // Do not leave a misleading white-background-only precomp or a
+            // half-created timeline layer when any source record fails to build.
+            try { if (layer) layer.remove(); } catch (eRemoveLayer) {}
+            try { if (assetComp) assetComp.remove(); } catch (eRemoveComp) {}
+            if (result && result.imageCache) discardImportedImages(result.imageCache);
+            status.text = "Gagal memasang " + data.name + ": " + eBuild.toString();
+        }
         finally { app.endUndoGroup(); }
     }
     installButton.onClick = install;
