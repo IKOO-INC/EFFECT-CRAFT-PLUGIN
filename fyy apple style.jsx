@@ -246,16 +246,18 @@
         var base64 = BUNDLE_DATA.assets[hash];
         if (!base64) throw new Error("Aset image sumber tidak ditemukan: " + hash);
         var file = new File(Folder.temp.fsName + "/fyy-fig-" + hash + ".png"), bytes = decodeBase64(base64), wrote;
-        // Repair a stale/truncated temp asset instead of trusting an old file
-        // left by a previous failed import.
-        if (!file.exists || file.length !== bytes.length) {
-            file.encoding = "BINARY";
-            if (!file.open("w")) throw new Error("Tidak bisa menulis image sementara: " + file.fsName);
-            wrote = file.write(bytes); file.close();
-            if (wrote === false || !file.exists || file.length !== bytes.length) throw new Error("Image sementara tidak lengkap: " + file.fsName + " (" + file.length + "/" + bytes.length + " byte)");
+        // Always rewrite from the embedded source bytes. Reusing a same-length
+        // temp file can still retain stale/corrupt data after a failed import.
+        file.encoding = "BINARY";
+        if (!file.open("w")) throw new Error("Tidak bisa menulis image sementara: " + file.fsName);
+        wrote = file.write(bytes); file.close();
+        if (wrote === false || !file.exists || file.length !== bytes.length) throw new Error("Image sementara tidak lengkap: " + file.fsName + " (" + file.length + "/" + bytes.length + " byte)");
+        var footage = null, importOptions = null;
+        try {
+            importOptions = new ImportOptions(file);
+            try { if (importOptions.canImportAs(ImportAsType.FOOTAGE)) importOptions.importAs = ImportAsType.FOOTAGE; } catch (eImportType) {}
+            footage = app.project.importFile(importOptions);
         }
-        var footage = null;
-        try { footage = app.project.importFile(new ImportOptions(file)); }
         catch (eImportImage) { throw new Error("Host gagal mengimpor PNG " + hash + ": " + eImportImage.toString()); }
         if (!footage || !footage.width || !footage.height) throw new Error("Host tidak menghasilkan footage PNG valid untuk " + hash + " dari " + file.fsName);
         cache[hash] = footage;
@@ -325,7 +327,12 @@
             left = Math.min(left, x1, x2); top = Math.min(top, y1, y2);
             right = Math.max(right, x1, x2); bottom = Math.max(bottom, y1, y2);
         }
-        left = Math.floor(left); top = Math.floor(top); right = Math.ceil(right); bottom = Math.ceil(bottom);
+        // Add 15% margin on each side (30% total canvas growth) for every
+        // component, and retain any larger source overflow without a pixel cap.
+        left = Math.floor(Math.min(left, -data.width * 0.15));
+        top = Math.floor(Math.min(top, -data.height * 0.15));
+        right = Math.ceil(Math.max(right, data.width * 1.15));
+        bottom = Math.ceil(Math.max(bottom, data.height * 1.15));
         return { left: left, top: top, right: right, bottom: bottom, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
     }
     function offsetLayerForCanvas(layer, left, top) {

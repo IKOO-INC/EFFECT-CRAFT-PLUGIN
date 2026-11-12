@@ -37,7 +37,7 @@ The Figma connector is unavailable in this session, so this is a bounded audit o
 
 ## Editable text mapping update
 
-The embedded catalog contains 310 text nodes across SF Pro Regular, Medium, Semibold, and Bold. The importer maps all four source weights to their corresponding SF Pro PostScript names and disables faux-bold. Text alignment now positions the point-text origin at the source bounds' left, center, or right anchor for every node, rather than treating nodes named `Label` as centered regardless of source alignment. For any child whose authored bounds extend outside a component frame, the generated precomp canvas expands to include it while the nominal source frame stays centered at 100% scale. Exact font availability, text baselines, and overflow rendering still need host verification.
+The embedded catalog contains 310 text nodes across SF Pro Regular, Medium, Semibold, and Bold. The importer maps all four source weights to their corresponding SF Pro PostScript names and disables faux-bold. Text alignment positions the point-text origin at the source bounds' left, center, or right anchor for every node. Every generated precomp canvas now receives 15% margin per side (30% total growth in each dimension); larger source overflows expand it further with no per-node pixel cap. The nominal source frame remains centered and source layers stay at 100% scale. Exact font availability, text baselines, and overflow rendering still need host verification.
 
 ## Follow-up acceptance checks
 
