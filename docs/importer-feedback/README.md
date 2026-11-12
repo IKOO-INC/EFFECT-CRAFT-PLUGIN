@@ -8,7 +8,7 @@ Path geometry must remain centered at the shape anchor to prevent the previously
 
 ## User-reported white-rectangle import issue
 
-The Activity View report/screenshot shows a single white rounded rectangle even though the panel reports 102 source records. The embedded payload contains 102 flattened records (23 shapes, 56 text nodes, and 23 images), so the white card is not the complete component. The importer now preserves authored visibility at the insertion frame and explicitly restores the source paint order; failures remove partial comps/layers and report an error rather than leaving a white-box-only precomp. These changes are code-level corrections and still require a render check in EffectCraft/After Effects. The payload is flattened and does not preserve editable nested Figma group relationships.
+The Activity View report/screenshot shows a single white rounded rectangle even though the panel reports 102 source records. The embedded payload contains 102 flattened records (23 shapes, 56 text nodes, and 23 images), so the white card is not the complete component. The importer now preserves authored visibility at the insertion frame and explicitly restores the source paint order; failures remove partial comps/layers and report an error rather than leaving a white-box-only precomp. The latest host tests exposed a shared PUA-glyph failure across Search, Quick Action, Menu, Find, and related files, plus a Thumbnail image failure in Activity View - iPad. Glyph mask mode now has a numeric AE fallback when the host enum is null; image temp files are length-checked and import results validated. These are targeted code corrections, not yet verified by a new host render. The payload is flattened and does not preserve editable nested Figma group relationships.
 
 ## User-reported glyph issue
 
@@ -16,7 +16,7 @@ The Activity View report/screenshot shows a single white rounded rectangle even 
 
 The screenshot shows small, fragmented or box-like marks in icon/symbol positions among otherwise legible labels. The source `.fig` stores many icons as Private Use Area text glyphs; the earlier importer created ordinary AE text with a regular SF Pro font, so the host could show missing-glyph boxes instead of the Figma artwork. The importer now embeds the actual glyph-outline command blobs from the `.fig` source for all 104 PUA symbol text nodes in the 34-item catalog (21 codepoint/style outlines), then creates editable AE mask paths from those outlines. It no longer relies on a host SF Symbols font or replaces the icon with a hand-built asset.
 
-A follow-up review found why the first vector attempt could produce blank icons: glyph vertices had been centered like AE shape-layer paths, but AE mask vertices use the solid's top-left source coordinates. The importer now builds mask paths in mask/source coordinates (without the shape-layer center offset) while sizing each mask solid to the full glyph outline. This correction passes syntax and structural checks; it still needs a visual run in EffectCraft/After Effects against this screenshot. If a glyph remains wrong, compare its `glyphKey`/source node outline—not a substitute icon—and preserve the complete source bounds.
+A follow-up review found why the first vector attempt could produce blank icons: glyph vertices had been centered like AE shape-layer paths, but AE mask vertices use the solid's top-left source coordinates. The importer now builds mask paths in mask/source coordinates (without the shape-layer center offset), sizes each mask solid to the full glyph outline, and uses numeric AE mask mode constants if the host exposes a null `MaskMode` enum. The user reported the same null/undefined error for many PUA glyphs; re-test all of those nodes after the fallback. If a glyph remains wrong, compare its `glyphKey`/source node outline—not a substitute icon—and preserve the complete source bounds.
 
 ## Supplied PSD/AI icon templates reviewed
 
@@ -37,7 +37,7 @@ The Figma connector is unavailable in this session, so this is a bounded audit o
 
 ## Editable text mapping update
 
-The embedded catalog contains 310 text nodes across SF Pro Regular, Medium, Semibold, and Bold. The importer now maps all four source weights to their corresponding SF Pro PostScript names and disables faux-bold, which previously risked mapping Medium/Bold as Regular and double-weighting Semibold. Exact font availability and rendered baselines still need host verification.
+The embedded catalog contains 310 text nodes across SF Pro Regular, Medium, Semibold, and Bold. The importer maps all four source weights to their corresponding SF Pro PostScript names and disables faux-bold. Text alignment now positions the point-text origin at the source bounds' left, center, or right anchor for every node, rather than treating nodes named `Label` as centered regardless of source alignment. For any child whose authored bounds extend outside a component frame, the generated precomp canvas expands to include it while the nominal source frame stays centered at 100% scale. Exact font availability, text baselines, and overflow rendering still need host verification.
 
 ## Follow-up acceptance checks
 

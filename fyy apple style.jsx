@@ -58,8 +58,22 @@
     status.characters = 48;
 
     function color3(c) { return [c.r || 0, c.g || 0, c.b || 0]; }
-    function setPosition(layer, x, y) { try { layer.property("ADBE Transform Group").property("ADBE Position").setValue([x, y]); } catch (e) {} }
-    function setOpacity(layer, value) { try { layer.property("ADBE Transform Group").property("ADBE Opacity").setValue(value); } catch (e) {} }
+    function setPosition(layer, x, y) {
+        var transform = layer.property("ADBE Transform Group"), prop, current;
+        if (!transform) throw new Error("Layer " + layer.name + " tidak memiliki Transform Group");
+        prop = transform.property("ADBE Position");
+        if (!prop) throw new Error("Layer " + layer.name + " tidak memiliki Position");
+        current = prop.value;
+        if (current instanceof Array && current.length > 2) prop.setValue([x, y, current[2]]);
+        else prop.setValue([x, y]);
+    }
+    function setOpacity(layer, value) {
+        var transform = layer.property("ADBE Transform Group"), prop;
+        if (!transform) throw new Error("Layer " + layer.name + " tidak memiliki Transform Group untuk Opacity");
+        prop = transform.property("ADBE Opacity");
+        if (!prop) throw new Error("Layer " + layer.name + " tidak memiliki Opacity");
+        prop.setValue(value);
+    }
     function makeShape(pathCommands, width, height) {
         // Figma stores local top-left path points; AE Shape vertices are relative to a centered anchor.
         var ox = width / 2, oy = height / 2;
@@ -81,6 +95,18 @@
         var result = new Shape();
         result.vertices = vertices; result.inTangents = inTangents; result.outTangents = outTangents; result.closed = closed;
         return result;
+    }
+    function sourceMaskMode(isHole) {
+        // EffectCraft's ExtendScript bridge can expose the mask properties while
+        // leaving the AE MaskMode enum null. These are AE's stable enum values:
+        // ADD=1 and SUBTRACT=2.
+        try {
+            if (typeof MaskMode !== "undefined" && MaskMode) {
+                var mode = isHole ? MaskMode.SUBTRACT : MaskMode.ADD;
+                if (mode !== undefined && mode !== null) return mode;
+            }
+        } catch (eMaskMode) {}
+        return isHole ? 2 : 1;
     }
     function makeMaskShape(pathCommands) {
         // AE mask vertices are in source-space from the layer's top-left origin;
@@ -133,9 +159,12 @@
         // second faux-bold pass to Semibold/Bold, which changes glyph widths.
         try { doc.fauxBold = false; } catch (eBold) {}
         try { doc.autoLeading = false; doc.leading = 22; } catch (eLeading) {}
-        // Label widths in Figma are measured glyph bounds; point text prevents fallback-font wrapping.
+        // Figma bounds are measured from the left edge, while AE point text
+        // positions are the paragraph alignment origin. Map every alignment, not
+        // just nodes literally named "Label"; names are not alignment semantics.
         try { if (entry.name === "Description") { doc.boxText = true; doc.boxTextSize = [entry.w, entry.h]; } else doc.boxText = false; } catch (eBox) {}
-        if (entry.name === "Label") { px = entry.x + entry.w / 2; align = "CENTER"; }
+        if (align === "CENTER") px = entry.x + entry.w / 2;
+        else if (align === "RIGHT") px = entry.x + entry.w;
         try { doc.justification = align === "CENTER" ? ParagraphJustification.CENTER_JUSTIFY : (align === "RIGHT" ? ParagraphJustification.RIGHT_JUSTIFY : ParagraphJustification.LEFT_JUSTIFY); } catch (eAlign) {}
         source.setValue(doc);
         setPosition(layer, px, entry.y + entry.baseline); setOpacity(layer, entry.opacity * 100);
@@ -160,8 +189,13 @@
             }
         }
         if (minX > maxX || minY > maxY) throw new Error("Glyph Figma tanpa geometri: " + entry.glyphKey);
-        var solidW = Math.max(1, Math.ceil(maxX - minX)), solidH = Math.max(1, Math.ceil(maxY - minY));
+        var solidW = Math.max(1, Math.ceil(maxX - minX)), solidH = Math.max(1, Math.ceil(maxY - minY)), glyphStage = "membuat solid";
+        try {
         var layer = comp.layers.addSolid(color3(entry.color), "Figma glyph vector " + entry.sourceId, solidW, solidH, comp.pixelAspect || 1, comp.duration);
+        if (!layer) throw new Error("Host tidak membuat solid untuk glyph " + entry.glyphKey);
+        glyphStage = "mendapatkan mask parade";
+        var maskParade = layer.property("ADBE Mask Parade");
+        if (!maskParade) throw new Error("Host tidak menyediakan ADBE Mask Parade untuk glyph " + entry.glyphKey);
         layer.name = "Figma glyph " + entry.sourceId + " · " + entry.name + " (source vector)";
         // Use the Figma-derived outer contours first, then subtract the source
         // contours whose winding marks counters. No host font is needed.
@@ -169,6 +203,7 @@
             for (i = 0; i < glyph.contours.length; i++) {
                 contour = glyph.contours[i];
                 if ((pass === 1) !== contour.hole) continue;
+                glyphStage = "membuat kontur " + (i + 1);
                 commands = [];
                 for (k = 0; k < contour.path.length; k++) {
                     command = contour.path[k];
@@ -176,18 +211,24 @@
                     else if (command.type === "C") commands.push({ type: "C", c1x: command.c1x * scale - minX, c1y: command.c1y * scale - minY, c2x: command.c2x * scale - minX, c2y: command.c2y * scale - minY, x: command.x * scale - minX, y: command.y * scale - minY });
                     else commands.push({ type: command.type });
                 }
-                mask = layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
+                mask = maskParade.addProperty("ADBE Mask Atom");
+                if (!mask) throw new Error("Host gagal membuat mask kontur glyph " + (i + 1));
                 mask.name = "Figma glyph contour " + (i + 1);
-                mask.property("ADBE Mask Shape").setValue(makeMaskShape(commands));
-                mask.property("ADBE Mask Mode").setValue(contour.hole ? MaskMode.SUBTRACT : MaskMode.ADD);
-                mask.property("ADBE Mask Feather").setValue([0, 0]);
-                mask.property("ADBE Mask Opacity").setValue(100);
-                mask.property("ADBE Mask Expansion").setValue(0);
+                var maskShapeProp = mask.property("ADBE Mask Shape"), maskModeProp = mask.property("ADBE Mask Mode");
+                if (!maskShapeProp || !maskModeProp) throw new Error("Host tidak menyediakan properti shape/mode mask untuk glyph " + entry.glyphKey);
+                maskShapeProp.setValue(makeMaskShape(commands));
+                maskModeProp.setValue(sourceMaskMode(contour.hole));
+                var featherProp = mask.property("ADBE Mask Feather"), opacityProp = mask.property("ADBE Mask Opacity"), expansionProp = mask.property("ADBE Mask Expansion");
+                if (featherProp) featherProp.setValue([0, 0]);
+                if (opacityProp) opacityProp.setValue(100);
+                if (expansionProp) expansionProp.setValue(0);
             }
         }
+        glyphStage = "mengatur posisi dan opacity";
         setPosition(layer, entry.x + (minX + maxX) / 2, entry.y + (minY + maxY) / 2);
         setOpacity(layer, entry.opacity * 100);
         return layer;
+        } catch (eGlyph) { throw new Error("Glyph " + entry.glyphKey + " tahap " + glyphStage + ": " + eGlyph.toString()); }
     }
     function addSourceTextOrGlyph(comp, entry) { return entry.glyphKey ? addSourceGlyph(comp, entry) : addSourceText(comp, entry); }
     function decodeBase64(input) {
@@ -204,13 +245,19 @@
         if (cache[hash]) return cache[hash];
         var base64 = BUNDLE_DATA.assets[hash];
         if (!base64) throw new Error("Aset image sumber tidak ditemukan: " + hash);
-        var file = new File(Folder.temp.fsName + "/fyy-fig-" + hash + ".png");
-        if (!file.exists) {
+        var file = new File(Folder.temp.fsName + "/fyy-fig-" + hash + ".png"), bytes = decodeBase64(base64), wrote;
+        // Repair a stale/truncated temp asset instead of trusting an old file
+        // left by a previous failed import.
+        if (!file.exists || file.length !== bytes.length) {
             file.encoding = "BINARY";
             if (!file.open("w")) throw new Error("Tidak bisa menulis image sementara: " + file.fsName);
-            file.write(decodeBase64(base64)); file.close();
+            wrote = file.write(bytes); file.close();
+            if (wrote === false || !file.exists || file.length !== bytes.length) throw new Error("Image sementara tidak lengkap: " + file.fsName + " (" + file.length + "/" + bytes.length + " byte)");
         }
-        var footage = app.project.importFile(new ImportOptions(file));
+        var footage = null;
+        try { footage = app.project.importFile(new ImportOptions(file)); }
+        catch (eImportImage) { throw new Error("Host gagal mengimpor PNG " + hash + ": " + eImportImage.toString()); }
+        if (!footage || !footage.width || !footage.height) throw new Error("Host tidak menghasilkan footage PNG valid untuk " + hash + " dari " + file.fsName);
         cache[hash] = footage;
         return footage;
     }
@@ -219,14 +266,25 @@
         for (hash in cache) if (cache.hasOwnProperty(hash)) { try { cache[hash].remove(); } catch (eRemoveFootage) {} }
     }
     function addSourceImage(comp, entry, cache) {
-        var footage = importSourceImage(entry.imageHash, cache), layer = comp.layers.add(footage);
-        layer.name = "Figma image " + entry.sourceId + " · " + entry.imageName;
-        layer.property("ADBE Transform Group").property("ADBE Scale").setValue([entry.w / footage.width * 100, entry.h / footage.height * 100]);
-        setPosition(layer, entry.x + entry.w / 2, entry.y + entry.h / 2);
-        setOpacity(layer, entry.opacity * 100);
+        var stage = "mengimpor footage", footage = null, layer = null, transform, scaleProp;
+        try {
+            footage = importSourceImage(entry.imageHash, cache);
+            stage = "membuat layer image"; layer = comp.layers.add(footage);
+            if (!layer) throw new Error("Host tidak membuat layer image untuk asset " + entry.imageHash);
+            layer.name = "Figma image " + entry.sourceId + " · " + entry.imageName;
+            stage = "mengatur transform image"; transform = layer.property("ADBE Transform Group");
+            if (!transform) throw new Error("ADBE Transform Group tidak tersedia");
+            scaleProp = transform.property("ADBE Scale");
+            if (!scaleProp) throw new Error("ADBE Scale tidak tersedia");
+            scaleProp.setValue([entry.w / footage.width * 100, entry.h / footage.height * 100]);
+            setPosition(layer, entry.x + entry.w / 2, entry.y + entry.h / 2);
+            setOpacity(layer, entry.opacity * 100);
+        } catch (eImage) { throw new Error("Gagal " + stage + " " + entry.imageName + " (node " + entry.sourceId + ", asset " + entry.imageHash + "): " + eImage.toString()); }
         if (entry.path && entry.path.length) {
             try {
-                var shape = makeShape(entry.path, entry.w, entry.h), sx = footage.width / entry.w, sy = footage.height / entry.h, i;
+                // Image masks use source-space coordinates, just like glyph masks;
+                // do not center this Figma-local path around the image anchor.
+                var shape = makeMaskShape(entry.path), sx = footage.width / entry.w, sy = footage.height / entry.h, i;
                 for (i = 0; i < shape.vertices.length; i++) { shape.vertices[i] = [shape.vertices[i][0] * sx, shape.vertices[i][1] * sy]; shape.inTangents[i] = [shape.inTangents[i][0] * sx, shape.inTangents[i][1] * sy]; shape.outTangents[i] = [shape.outTangents[i][0] * sx, shape.outTangents[i][1] * sy]; }
                 var mask = layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
                 mask.property("ADBE Mask Shape").setValue(shape);
@@ -260,8 +318,25 @@
         ease(pos, pos.nearestKeyIndex(t0)); ease(pos, pos.nearestKeyIndex(t1));
     }
     function hasEffect(entry, effectName) { var i; for (i = 0; entry.sourceEffects && i < entry.sourceEffects.length; i++) if (entry.sourceEffects[i].type === effectName && entry.sourceEffects[i].visible !== false) return true; return false; }
+    function sourceContentBounds(data) {
+        var left = 0, top = 0, right = data.width, bottom = data.height, i, entry, x1, y1, x2, y2;
+        for (i = 0; i < data.layers.length; i++) {
+            entry = data.layers[i]; x1 = entry.x; y1 = entry.y; x2 = entry.x + entry.w; y2 = entry.y + entry.h;
+            left = Math.min(left, x1, x2); top = Math.min(top, y1, y2);
+            right = Math.max(right, x1, x2); bottom = Math.max(bottom, y1, y2);
+        }
+        left = Math.floor(left); top = Math.floor(top); right = Math.ceil(right); bottom = Math.ceil(bottom);
+        return { left: left, top: top, right: right, bottom: bottom, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
+    }
+    function offsetLayerForCanvas(layer, left, top) {
+        if (!left && !top) return;
+        var pos = layer.property("ADBE Transform Group").property("ADBE Position"), value = pos.value;
+        if (value instanceof Array && value.length > 2) pos.setValue([value[0] - left, value[1] - top, value[2]]);
+        else pos.setValue([value[0] - left, value[1] - top]);
+    }
     function buildSourceComp(parentComp, data, duration) {
-        var fps = parentComp.frameRate || 30, comp = app.project.items.addComp("FYY · " + data.name + " · .fig source", data.width, data.height, parentComp.pixelAspect || 1, Math.max(parentComp.duration, 3), fps);
+        var bounds = sourceContentBounds(data), fps = parentComp.frameRate || 30;
+        var comp = app.project.items.addComp("FYY · " + data.name + " · .fig source", bounds.width, bounds.height, parentComp.pixelAspect || 1, Math.max(parentComp.duration, 3), fps);
         comp.bgColor = [0, 0, 0];
         var created = [], skippedBlur = false, skippedGradient = false, skippedLayerCount = 0, glyphCount = 0, imageCache = {}, i, entry, layer;
         var stage = "membuat layer sumber", currentEntry = null;
@@ -274,6 +349,7 @@
                 if (entry.kind === "image") layer = addSourceImage(comp, entry, imageCache);
                 else if (entry.kind === "text") { if (entry.glyphKey) glyphCount++; layer = addSourceTextOrGlyph(comp, entry); }
                 else layer = addSourceShape(comp, entry);
+                offsetLayerForCanvas(layer, bounds.left, bounds.top);
                 if (entry.kind === "shape" && entry.name.indexOf("Fill + Shadow") === 0 && entry.name.indexOf("fill 1") >= 0) addSourceShadow(layer, entry.sourceEffects);
                 created.push({ entry: entry, layer: layer, delay: 0.42 * i / Math.max(data.layers.length - 1, 1), lift: entry.kind === "text" ? 4 : 6 });
             }
@@ -285,7 +361,7 @@
             for (i = 0; i < created.length; i++) { currentEntry = created[i].entry; created[i].layer.moveToBeginning(); }
             stage = "membuat keyframe motion";
             for (i = 0; i < created.length; i++) { currentEntry = created[i].entry; animate(created[i].layer, 0, duration, created[i].delay, created[i].lift); }
-            return { comp: comp, imageCache: imageCache, sourceLayerCount: data.layers.length, skippedLayerCount: skippedLayerCount, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
+            return { comp: comp, imageCache: imageCache, bounds: bounds, sourceWidth: data.width, sourceHeight: data.height, sourceLayerCount: data.layers.length, skippedLayerCount: skippedLayerCount, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
         } catch (eBuildComp) {
             // A failed child must not survive as an orphaned white-box comp or
             // leave its newly imported footage behind in the Project panel.
@@ -310,9 +386,15 @@
             // Preserve the complete authored .fig component at 100% scale.
             // No auto-fit to the target comp: use a sufficiently large target
             // composition instead of shrinking or constraining imported content.
-            layer.property("ADBE Transform Group").property("ADBE Position").setValue([parentComp.width / 2, parentComp.height / 2]);
+            // Keep the authored frame centered in the target even when the
+            // generated precomp canvas expands to include source nodes outside it.
+            layer.property("ADBE Transform Group").property("ADBE Position").setValue([
+                parentComp.width / 2 - data.width / 2 + result.bounds.left + result.bounds.width / 2,
+                parentComp.height / 2 - data.height / 2 + result.bounds.top + result.bounds.height / 2
+            ]);
             layer.startTime = parentComp.time; layer.inPoint = parentComp.time; layer.outPoint = Math.min(parentComp.duration, parentComp.time + assetComp.duration); parentComp.selectedLayers = [layer];
             var message = data.name + " terpasang dari .fig; " + result.layerCount + "/" + result.sourceLayerCount + " node sumber menjadi layer.";
+            if (result.bounds.width !== result.sourceWidth || result.bounds.height !== result.sourceHeight) message += " Canvas diperluas ke " + result.bounds.width + "×" + result.bounds.height + " untuk mempertahankan node yang melampaui frame (tanpa scale/crop).";
             if (result.skippedLayerCount) message += " " + result.skippedLayerCount + " node dengan efek GLASS dilewati.";
             if (result.glyphCount) message += " " + result.glyphCount + " ikon/simbol memakai outline vector asli Figma.";
             if (result.skippedBlur) message += " Blur latar Figma tidak dipetakan identik.";
