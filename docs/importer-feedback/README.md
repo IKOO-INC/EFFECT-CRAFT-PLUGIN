@@ -6,6 +6,10 @@ Import each complete source element from its original `.fig` node. Do not add pe
 
 Path geometry must remain centered at the shape anchor to prevent the previously reported offset/cropping problem. Use only original `.fig` files as importer sources; do not replace missing or unsupported content with hand-built art, SVG exports, or thumbnails. Clearly disclose any source effects/fonts that cannot be preserved faithfully/editably.
 
+## User-reported white-rectangle import issue
+
+The Activity View report/screenshot shows a single white rounded rectangle even though the panel reports 102 source records. The embedded payload contains 102 flattened records (23 shapes, 56 text nodes, and 23 images), so the white card is not the complete component. The importer now preserves authored visibility at the insertion frame and explicitly restores the source paint order; failures remove partial comps/layers and report an error rather than leaving a white-box-only precomp. These changes are code-level corrections and still require a render check in EffectCraft/After Effects. The payload is flattened and does not preserve editable nested Figma group relationships.
+
 ## User-reported glyph issue
 
 ![User-provided symbol/glyph bug screenshot](./bugsimbol.png)
@@ -30,6 +34,10 @@ The Figma connector is unavailable in this session, so this is a bounded audit o
 - `Activity View.fig` and `Alert.fig` include Figma `SYMBOL` nodes and SF-system-style glyphs encoded as Private Use Area text. `Activity View.fig` includes a `_System Icons` section with named icons including Airdrop, Weather, Wallet, Photos, Music, Maps, and Calendar.
 - `Button - Liquid Glass - Symbol.fig` is a symbol source whose thumbnail shows a blue circular button with a white checkmark.
 - These archives confirm symbol references. No standalone emoji asset/reference was confirmed in the inspected files; this does not establish that none exists in the full Figma workspace. Private Use Area glyphs also depend on compatible fonts being available and mapped in the host.
+
+## Editable text mapping update
+
+The embedded catalog contains 310 text nodes across SF Pro Regular, Medium, Semibold, and Bold. The importer now maps all four source weights to their corresponding SF Pro PostScript names and disables faux-bold, which previously risked mapping Medium/Bold as Regular and double-weighting Semibold. Exact font availability and rendered baselines still need host verification.
 
 ## Follow-up acceptance checks
 

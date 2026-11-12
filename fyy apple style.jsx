@@ -116,13 +116,22 @@
         setPosition(layer, entry.x + entry.w / 2, entry.y + entry.h / 2);
         return layer;
     }
+    function sourceFontName(entry) {
+        if (entry.fontFamily !== "SF Pro") return entry.fontFamily;
+        if (entry.fontStyle === "Medium") return "SFPro-Medium";
+        if (entry.fontStyle === "Semibold") return "SFPro-Semibold";
+        if (entry.fontStyle === "Bold") return "SFPro-Bold";
+        return "SFPro-Regular";
+    }
     function addSourceText(comp, entry) {
         var layer = comp.layers.addText(entry.text), px = entry.x, align = entry.align;
         layer.name = "Figma text " + entry.sourceId + " · " + entry.name + " (editable)";
         var source = layer.property("ADBE Text Properties").property("ADBE Text Document"), doc = source.value;
         doc.fontSize = entry.fontSize; doc.fillColor = color3(entry.color); doc.applyFill = true; doc.applyStroke = false;
-        try { doc.font = entry.fontFamily === "SF Pro" ? (entry.fontStyle === "Semibold" ? "SFPro-Semibold" : "SFPro-Regular") : entry.fontFamily; } catch (eFont) {}
-        try { doc.fauxBold = entry.fontStyle === "Semibold"; } catch (eBold) {}
+        try { doc.font = sourceFontName(entry); } catch (eFont) {}
+        // The exact source family/style name carries the weight; do not apply a
+        // second faux-bold pass to Semibold/Bold, which changes glyph widths.
+        try { doc.fauxBold = false; } catch (eBold) {}
         try { doc.autoLeading = false; doc.leading = 22; } catch (eLeading) {}
         // Label widths in Figma are measured glyph bounds; point text prevents fallback-font wrapping.
         try { if (entry.name === "Description") { doc.boxText = true; doc.boxTextSize = [entry.w, entry.h]; } else doc.boxText = false; } catch (eBox) {}
@@ -254,32 +263,36 @@
     function buildSourceComp(parentComp, data, duration) {
         var fps = parentComp.frameRate || 30, comp = app.project.items.addComp("FYY · " + data.name + " · .fig source", data.width, data.height, parentComp.pixelAspect || 1, Math.max(parentComp.duration, 3), fps);
         comp.bgColor = [0, 0, 0];
-        var created = [], skippedGlass = false, skippedBlur = false, skippedGradient = false, glyphCount = 0, imageCache = {}, i, entry, layer;
+        var created = [], skippedBlur = false, skippedGradient = false, skippedLayerCount = 0, glyphCount = 0, imageCache = {}, i, entry, layer;
+        var stage = "membuat layer sumber", currentEntry = null;
         try {
             for (i = 0; i < data.layers.length; i++) {
-                entry = data.layers[i];
-                if (hasEffect(entry, "GLASS")) { skippedGlass = true; continue; }
+                entry = data.layers[i]; currentEntry = entry; stage = "membuat layer sumber";
+                if (hasEffect(entry, "GLASS")) { skippedLayerCount++; continue; }
                 if (hasEffect(entry, "BACKGROUND_BLUR") || hasEffect(entry, "FOREGROUND_BLUR")) skippedBlur = true;
                 if (entry.gradientStops && entry.gradientStops.length) skippedGradient = true;
                 if (entry.kind === "image") layer = addSourceImage(comp, entry, imageCache);
                 else if (entry.kind === "text") { if (entry.glyphKey) glyphCount++; layer = addSourceTextOrGlyph(comp, entry); }
                 else layer = addSourceShape(comp, entry);
                 if (entry.kind === "shape" && entry.name.indexOf("Fill + Shadow") === 0 && entry.name.indexOf("fill 1") >= 0) addSourceShadow(layer, entry.sourceEffects);
-                created.push({ layer: layer, delay: 0.42 * i / Math.max(data.layers.length - 1, 1), lift: entry.kind === "text" ? 4 : 6 });
+                created.push({ entry: entry, layer: layer, delay: 0.42 * i / Math.max(data.layers.length - 1, 1), lift: entry.kind === "text" ? 4 : 6 });
             }
             // Explicitly restore Figma painter order instead of depending on the
             // host's layer-collection insertion behavior. Earlier source records are
             // behind later records; placing each in source order at the top leaves
             // the final record on top and the first (usually a background) at bottom.
-            for (i = 0; i < created.length; i++) created[i].layer.moveToBeginning();
-            for (i = 0; i < created.length; i++) animate(created[i].layer, 0, duration, created[i].delay, created[i].lift);
-            return { comp: comp, imageCache: imageCache, skippedGlass: skippedGlass, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
+            stage = "mengatur urutan layer sumber";
+            for (i = 0; i < created.length; i++) { currentEntry = created[i].entry; created[i].layer.moveToBeginning(); }
+            stage = "membuat keyframe motion";
+            for (i = 0; i < created.length; i++) { currentEntry = created[i].entry; animate(created[i].layer, 0, duration, created[i].delay, created[i].lift); }
+            return { comp: comp, imageCache: imageCache, sourceLayerCount: data.layers.length, skippedLayerCount: skippedLayerCount, skippedBlur: skippedBlur, skippedGradient: skippedGradient, glyphCount: glyphCount, layerCount: created.length };
         } catch (eBuildComp) {
             // A failed child must not survive as an orphaned white-box comp or
             // leave its newly imported footage behind in the Project panel.
             try { comp.remove(); } catch (eRemoveBuildComp) {}
             discardImportedImages(imageCache);
-            throw eBuildComp;
+            var failedNode = currentEntry ? (currentEntry.sourceId + " · " + currentEntry.name) : data.name;
+            throw new Error("Tahap " + stage + ", node " + failedNode + ": " + eBuildComp.toString());
         }
     }
     function install() {
@@ -299,9 +312,9 @@
             // composition instead of shrinking or constraining imported content.
             layer.property("ADBE Transform Group").property("ADBE Position").setValue([parentComp.width / 2, parentComp.height / 2]);
             layer.startTime = parentComp.time; layer.inPoint = parentComp.time; layer.outPoint = Math.min(parentComp.duration, parentComp.time + assetComp.duration); parentComp.selectedLayers = [layer];
-            var message = data.name + " terpasang dari .fig; " + result.layerCount + " layer editable.";
+            var message = data.name + " terpasang dari .fig; " + result.layerCount + "/" + result.sourceLayerCount + " node sumber menjadi layer.";
+            if (result.skippedLayerCount) message += " " + result.skippedLayerCount + " node dengan efek GLASS dilewati.";
             if (result.glyphCount) message += " " + result.glyphCount + " ikon/simbol memakai outline vector asli Figma.";
-            if (result.skippedGlass) message += " Efek GLASS dilewati.";
             if (result.skippedBlur) message += " Blur latar Figma tidak dipetakan identik.";
             if (result.skippedGradient) message += " Gradient memakai stop warna sumber pertama.";
             status.text = message + " Buka precomp untuk edit teks/vector.";
