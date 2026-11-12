@@ -82,6 +82,26 @@
         result.vertices = vertices; result.inTangents = inTangents; result.outTangents = outTangents; result.closed = closed;
         return result;
     }
+    function makeMaskShape(pathCommands) {
+        // AE mask vertices are in source-space from the layer's top-left origin;
+        // unlike shape-layer paths, they must not be shifted to a centered anchor.
+        var vertices = [], inTangents = [], outTangents = [], closed = false, i, c, end, out;
+        for (i = 0; i < pathCommands.length; i++) {
+            c = pathCommands[i];
+            if (c.type === "M" || c.type === "L") {
+                vertices.push([c.x, c.y]); inTangents.push([0, 0]); outTangents.push([0, 0]);
+            } else if (c.type === "C") {
+                if (!vertices.length) continue;
+                out = [c.c1x - vertices[vertices.length - 1][0], c.c1y - vertices[vertices.length - 1][1]];
+                outTangents[outTangents.length - 1] = out;
+                end = [c.x, c.y]; vertices.push(end);
+                inTangents.push([c.c2x - end[0], c.c2y - end[1]]); outTangents.push([0, 0]);
+            } else if (c.type === "Z") closed = true;
+        }
+        var result = new Shape();
+        result.vertices = vertices; result.inTangents = inTangents; result.outTangents = outTangents; result.closed = closed;
+        return result;
+    }
     function addSourceShape(comp, entry) {
         var layer = comp.layers.addShape();
         layer.name = "Figma " + entry.sourceId + " · " + entry.name;
@@ -149,7 +169,7 @@
                 }
                 mask = layer.property("ADBE Mask Parade").addProperty("ADBE Mask Atom");
                 mask.name = "Figma glyph contour " + (i + 1);
-                mask.property("ADBE Mask Shape").setValue(makeShape(commands, solidW, solidH));
+                mask.property("ADBE Mask Shape").setValue(makeMaskShape(commands));
                 mask.property("ADBE Mask Mode").setValue(contour.hole ? MaskMode.SUBTRACT : MaskMode.ADD);
                 mask.property("ADBE Mask Feather").setValue([0, 0]);
                 mask.property("ADBE Mask Opacity").setValue(100);

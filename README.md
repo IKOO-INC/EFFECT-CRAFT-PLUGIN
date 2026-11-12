@@ -85,7 +85,7 @@ Koordinat path Figma (origin kiri-atas) dipusatkan ke anchor shape AE sebelum la
 
 Batas efek: Figma `GLASS`/refraction dan background blur proprietary belum dipetakan identik; layer GLASS dilewati dan status impor memberi peringatan. Gradient hanya memakai stop warna sumber pertama. SF Pro dipakai bila terpasang; teks tetap native/editable. Path, ukuran, posisi, fill warna, serta gambar berasal dari data `.fig`.
 
-**Validasi:** syntax check seluruh panel dan mock smoke test yang membuat komposisi untuk seluruh 34 entri (anchor path, label Action 2, image import, keyframe). Perbaikan glyph terbaru lolos syntax dan structural check untuk 104 node simbol sumber serta 21 outline codepoint/style yang diekstrak dari `.fig`; runtime EffectCraft/After Effects masih perlu verifikasi visual.
+**Validasi:** syntax check seluruh panel dan mock smoke test yang membuat komposisi untuk seluruh 34 entri (anchor path, label Action 2, image import, keyframe). Outline 104 node simbol dipetakan ke 21 varian `.fig`; glyph masks memakai koordinat top-left milik source layer AE, bukan offset tengah shape layer. Sintaks/struktur lolos check; runtime EffectCraft/After Effects masih perlu verifikasi visual.
 
 Catatan sizing, screenshot bug glyph, audit template PSD/AI, dan referensi symbol `.fig`: [catatan QA importer](./docs/importer-feedback/README.md).
 
