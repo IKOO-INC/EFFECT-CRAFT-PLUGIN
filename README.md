@@ -11,7 +11,7 @@ Panel ScriptUI `.jsx` berisi **60 animasi entrance teks** dengan gaya motion gra
 1. Buka EffectCraft.
 2. Pilih **Effect ▸ Install Effect Plug-in Bundle (Folder)…** (atau menu instalasi bundle yang tersedia di versi Anda), lalu pilih folder repo ini. EffectCraft memasang berkas `.jsx` sebagai ScriptUI panel.
 3. Buka panel dari **Window ▸ Text Animation Studio.jsx**, **Window ▸ Curve Studio.jsx**, **Window ▸ Motion FX Studio.jsx**, **Window ▸ Apple Card Motion Studio.jsx**, **Window ▸ Apple Card Layout Studio.jsx**, atau **Window ▸ fyy apple style.jsx**. Jika tidak langsung terlihat, periksa submenu panel.
-4. Di Text Animation Studio, pilih preset dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe, pilih preset atau atur influence/speed, lalu klik **APPLY CURVE**. Di Motion FX Studio, pilih layer dan klik kartu FX untuk menambahkan effect stack. Di Apple Card Motion Studio, pilih layer kartu/teks/artwork dan klik preset gerak. Di Apple Card Layout Studio, pilih tipe kartu, isi judul/deskripsi per baris, lalu buat layout editable.
+4. Di Text Animation Studio, pilih preset dan klik **Terapkan ke layer**. Di Curve Studio, pilih keyframe, pilih preset atau atur influence/speed, lalu klik **APPLY CURVE**. Di Motion FX Studio, pilih layer dan klik kartu FX untuk menambahkan effect stack. Di Apple Card Motion Studio, pilih layer kartu/teks/artwork dan klik preset gerak. Di Apple Card Layout Studio, pilih tipe kartu, isi judul/deskripsi per baris, lalu buat layout editable. Di **fyy apple style 1.0.1**, pilih item `.fig` dari dropdown dan klik **PASANG + ANIMASIKAN**; untuk mengedit teks/vector, buka precomp hasil impor.
 
 **Alternatif:** pasang masing-masing berkas `.jsx` melalui **File ▸ Scripts ▸ Install ScriptUI Panel…**. Jika hanya menjalankan berkas melalui **Run Script File…**, panel akan terbuka sebagai palette mengambang.
 
@@ -73,13 +73,16 @@ Acuan desain: [Apple HIG — Materials & Liquid Glass](https://developer.apple.c
 
 Berkas: [`Apple Card Layout Studio.jsx`](./Apple%20Card%20Layout%20Studio.jsx)
 
-## 6. fyy apple style — importer `.fig` (uji Action Sheet)
+## 6. fyy apple style — versi 1.0.1
 
-Panel bernama persis **fyy apple style** memuat data vektor dan teks yang diekstrak dari node sumber `1:76` pada **Action Sheet.fig** (format fig-kiwi v101). Saat dipasang, panel membuat precomp 300 × 296 dengan shape path native dan teks AE editable, lalu memberi stagger entrance motion. Bundle JSX memuat payload yang diturunkan dari `.fig`; tidak menggunakan SVG ekspor, thumbnail, atau artwork yang digambar ulang sebagai pengganti.
+Panel bernama persis **fyy apple style** menyediakan dropdown dari **34 berkas `.fig` per-item** yang dapat diunduh dari folder Drive. Pilih komponen, lalu tekan **PASANG + ANIMASIKAN** untuk membuat precomp dengan path native AE, teks editable, aset gambar asli bila ada, dan stagger entrance. Payload vektor/teks diturunkan dari node `.fig`; file SVG tidak digunakan sebagai sumber.
 
-Batas fidelity: efek Figma `GLASS` berisi refraction, noise, specular, serta inner effects yang tidak dipetakan ke EffectCraft/AE; layer GLASS sengaja dilewati dan panel memberi tahu pengguna. Shadow native mengambil parameter drop shadow sumber utama; efek blend mode lain yang proprietary mungkin berbeda. Tipografi mencoba SF Pro jika font itu tersedia; teks dan node asal tetap dinamai untuk inspeksi/edit.
+Koordinat path Figma (origin kiri-atas) dipusatkan ke anchor shape AE sebelum layer diposisikan—perbaikan terhadap clipping/offset sebelumnya. Label tombol memakai point text dengan anchor tengah agar fallback font tidak memecah kata seperti “Action 2”. PNG yang dirujuk dokumen Activity View disematkan dari image blob `.fig`, ditulis sementara saat impor, lalu dibawa masuk sebagai footage.
 
-**Cakupan saat ini hanya Action Sheet sebagai tes importer**; katalog 43 komponen dan pilihan item lain belum tercakup. Validasi sudah mencakup parse/smoke test di mock After Effects, bukan runtime EffectCraft/After Effects yang sebenarnya.
+**Cakupan sumber yang belum tersedia:** 15 nama dari daftar 43 hanya ada di `Untitled (2).fig` (142,425,014 byte), yang melampaui batas unduh Drive 100 MB; item itu tidak ditampilkan sebagai artwork pengganti. Nama yang belum tercakup: Liquid Glass - Regular - Large; Notification - Collapsed; Notification - Collapsed - List; Notification - Expanded; Page Control; Popup Button; Popovers (iPad Only); Segmented Control; Progress Bar - Indeterminate Circular (Spinner); Progress Bar - Determinate Linear; Sheet - iPhone; Sliders; Tab Bar - iPhone; Tab Bar - iPhone Duo; Tab Bar - iPad. Jika file tersebut dipecah/diunggah sebagai `.fig` yang lebih kecil, katalog dapat dilengkapi.
+
+Batas efek: Figma `GLASS`/refraction dan background blur proprietary belum dipetakan identik; layer GLASS dilewati dan status impor memberi peringatan. Gradient hanya memakai stop warna sumber pertama. SF Pro dipakai bila terpasang; teks tetap native/editable. Path, ukuran, posisi, fill warna, serta gambar berasal dari data `.fig`.
+
+**Validasi:** syntax check seluruh panel dan mock smoke test yang membuat komposisi untuk seluruh 34 entri (termasuk tes anchor path, label Action 2, image import, serta keyframe). Runtime EffectCraft/After Effects belum tersedia untuk verifikasi akhir.
 
 Berkas: [`fyy apple style.jsx`](./fyy%20apple%20style.jsx)
-
